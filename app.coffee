@@ -48,4 +48,14 @@ console.log "Express server listening on port " + app.get("port")
 URL Routing
 ###
 
+#show sample json response here
 app.get "/", routes.index
+
+#return a list of urls in the db
+#if url_str parameter is included, search for that specific URL by the string provided
+app.get "/api/urls/"
+#?apikey={API_KEY}
+#?url_str={url_str}
+
+app.get "/api/urls/:url_id"
+#?apikey={API_KEY}

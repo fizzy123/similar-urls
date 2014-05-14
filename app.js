@@ -59,4 +59,8 @@ Module dependencies.
 
   app.get("/", routes.index);
 
+  app.get("/api/urls/");
+
+  app.get("/api/urls/:url_id");
+
 }).call(this);
