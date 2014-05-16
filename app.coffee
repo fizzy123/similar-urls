@@ -52,10 +52,26 @@ URL Routing
 app.get "/", routes.index
 
 #return a list of urls in the db
-#if url_str parameter is included, search for that specific URL by the string provided
-app.get "/api/urls/"
+#app.get "/api/urls/"
+#if urlStr parameter is included
+#search for that specific URL by the string provided
 #?apikey={API_KEY}
-#?url_str={url_str}
+#?urlStr={urlStr}
+
+
+#add a url to the db
+app.post "/api/urls/"
+#urlStr={urlStr}
+#similarUrls = urlStr.findSimilar
+
 
 app.get "/api/urls/:url_id"
 #?apikey={API_KEY}
+
+
+###
+Generate similar URLs
+###
+findSimilar = () ->
+	return similarUrls
+

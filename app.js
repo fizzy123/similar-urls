@@ -5,7 +5,7 @@ Module dependencies.
  */
 
 (function() {
-  var app, express, path, port, routes, server;
+  var app, express, findSimilar, path, port, routes, server;
 
   express = require("express");
 
@@ -59,8 +59,17 @@ Module dependencies.
 
   app.get("/", routes.index);
 
-  app.get("/api/urls/");
+  app.post("/api/urls/");
 
   app.get("/api/urls/:url_id");
+
+
+  /*
+  Generate similar URLs
+   */
+
+  findSimilar = function() {
+    return similarUrls;
+  };
 
 }).call(this);
