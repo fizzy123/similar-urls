@@ -5,7 +5,7 @@ Module dependencies.
  */
 
 (function() {
-  var app, express, findSimilar, path, port, request, routes, server, url;
+  var app, express, findSimilar, isEmpty, path, port, printKeysAndValues, request, routes, server, url;
 
   express = require("express");
 
@@ -63,33 +63,61 @@ Module dependencies.
 
   app.get("/", routes.index);
 
-  app.post("/api/urls/", function(req, res) {
-    var i, idPart, indexSplit, key, sharedPath, similarUrls, urlObj, urlStr, value, _ref;
-    urlStr = req.body.urlStr;
-    similarUrls = urlStr.findSimilar;
-    urlObj = url.parse(urlStr, true);
-    console.log(urlObj);
-    console.log('host is ' + urlObj.host);
-    console.log('pathname is ' + urlObj.pathname);
+  String.prototype.removeSlash = function() {
+    var output;
+    output = this;
+    if (this.charAt(this.length - 1) === '/') {
+      output = this.substr(0, this.length - 1);
+    }
+    return output;
+  };
+
+  isEmpty = function(obj) {
+    var key;
+    for (key in obj) {
+      console.log(key);
+      if (obj.hasOwnProperty(key)) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  printKeysAndValues = function(obj) {
+    var i, key, value, _results;
     i = 0;
-    _ref = urlObj.query;
-    for (key in _ref) {
-      value = _ref[key];
+    _results = [];
+    for (key in obj) {
+      value = obj[key];
       if (i === 0) {
         console.log('query is ');
       }
       console.log('  ' + key + ': ' + value);
-      i++;
+      _results.push(i++);
     }
-    if (urlObj.query === '{}') {
-      console.log('the path is based on slashes');
+    return _results;
+  };
+
+  app.post("/api/urls/", function(req, res) {
+    var idPart, indexSplit, sharedPath, similarUrls, urlObj, urlStr;
+    urlStr = req.body.urlStr;
+    similarUrls = urlStr.findSimilar;
+    urlObj = url.parse(urlStr, true);
+    console.log('host is ' + urlObj.host);
+    console.log('pathname is ' + urlObj.pathname);
+    if (isEmpty(urlObj.query)) {
+      console.log('query is empty');
+      console.log('REST style. No query string needed.');
+      urlObj.pathname = urlObj.pathname.removeSlash();
       indexSplit = urlObj.pathname.lastIndexOf("/");
       sharedPath = urlObj.pathname.substr(0, indexSplit);
-      idPart = urlObj.path.substr(indexSplit + 1);
-      console.log(sharedPath);
-      console.log(idPart);
+      idPart = urlObj.pathname.substr(indexSplit + 1);
+      console.log('All event URLs share this string: ' + sharedPath);
+      console.log('Event id is ' + idPart);
     } else {
-      console.log('the path is based on question marks');
+      console.log('The events are accessed with a query string.');
+      console.log('One of these is the event id.');
+      printKeysAndValues(urlObj.query);
     }
     res.set({
       'Content-Type': 'text/plain',

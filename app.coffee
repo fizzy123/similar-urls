@@ -66,6 +66,32 @@ app.get "/", routes.index
 #curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fwww.workshopsf.org%2F%3Fpage_id%3D140%26id%3D1328" http://localhost:3000/api/urls/
 #curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fevents.stanford.edu%2Fevents%2F353%2F35309%2F" http://localhost:3000/api/urls/
 
+String.prototype.removeSlash = () ->
+	#If last char is a slash
+	output = this
+	if this.charAt(this.length-1) is '/'
+		#Trim the slash
+		output = this.substr(0,this.length-1)
+
+	return output
+	
+
+isEmpty = (obj) ->
+	for key of obj
+		console.log(key)
+		if(obj.hasOwnProperty(key))
+			return false
+	return true
+
+printKeysAndValues = (obj) ->
+	i = 0
+	for key, value of obj
+		if i is 0
+			console.log('query is ')	
+		console.log('  ' + key + ': ' + value)
+		i++
+
+
 
 app.post "/api/urls/", (req, res) ->
 	#urlStr={urlStr}
@@ -73,37 +99,32 @@ app.post "/api/urls/", (req, res) ->
 	similarUrls = urlStr.findSimilar
 
 	urlObj = url.parse(urlStr,true) #true parameter parses query string
-	console.log(urlObj)
+	#console.log(urlObj)
 
-	#urlObj.host= 'www.sfmoma.org'
-	#urlObj.pathname= '/exhib_events/exhibitions/513'
-	
 	console.log('host is ' + urlObj.host)
 	console.log('pathname is ' + urlObj.pathname)
-	#console.log(urlObj.query)
-
-	i = 0
-	for key, value of urlObj.query
-		if i is 0
-			console.log('query is ')	
-		console.log('  ' + key + ': ' + value)
-		i++
 	
-	#if the path is based on slashes, not question marks
-	if urlObj.query is '{}'
-		console.log('the path is based on slashes')
+	#REST style. No query string needed.
+	if isEmpty(urlObj.query)
+		console.log('query is empty')
+		console.log('REST style. No query string needed.')
+		
+		urlObj.pathname = urlObj.pathname.removeSlash()
+
 		indexSplit = urlObj.pathname.lastIndexOf("/")
 		sharedPath = urlObj.pathname.substr(0,indexSplit)
 		
-		#513 OR 274127485-mrt-presents-shakespeares-will OR
-		#?page_id=140&id=1328 OR 
-		idPart = urlObj.path.substr(indexSplit+1)
-		console.log(sharedPath)
-		console.log(idPart)
+		#513 OR 274127485-mrt-presents-shakespeares-will OR 
+		idPart = urlObj.pathname.substr(indexSplit+1)
+		console.log('All event URLs share this string: ' + sharedPath)
+		console.log('Event id is ' + idPart)
 	
-	#if the path is based on question marks, not slashes
+	#The events are accessed with a query string.
 	else
-		console.log('the path is based on question marks')
+		console.log('The events are accessed with a query string.')
+		console.log('One of these is the event id.')
+		#Print the query string object
+		printKeysAndValues(urlObj.query)
 
 
 	res.set({
