@@ -6,8 +6,8 @@ express = require("express")
 routes = require("./routes")
 #config = require("./config")
 path = require("path")
-#request = require("request")
-#url = require("url")
+request = require("request")
+url = require("url")
 
 ###
 Middleware / express setup.
@@ -53,20 +53,72 @@ app.get "/", routes.index
 
 #return a list of urls in the db
 #app.get "/api/urls/"
-#if urlStr parameter is included
-#search for that specific URL by the string provided
-#?apikey={API_KEY}
-#?urlStr={urlStr}
+	#if urlStr parameter is included
+	#search for that specific URL by the string provided
+	#?apikey={API_KEY}
+	#?urlStr={urlStr}
 
 
-#add a url to the db
-app.post "/api/urls/"
-#urlStr={urlStr}
-#similarUrls = urlStr.findSimilar
+#Add a url to the db
+#To test:
+#curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fwww.sfmoma.org%2Fexhib_evens%2Fexhibitions%2F513" http://localhost:3000/api/urls/
+#curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fcalendar.boston.com%2Flowell_ma%2Fevents%2Fshow%2F274127485-mrt-presents-shakespeares-will" http://localhost:3000/api/urls/
+#curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fwww.workshopsf.org%2F%3Fpage_id%3D140%26id%3D1328" http://localhost:3000/api/urls/
+#curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fevents.stanford.edu%2Fevents%2F353%2F35309%2F" http://localhost:3000/api/urls/
+
+
+app.post "/api/urls/", (req, res) ->
+	#urlStr={urlStr}
+	urlStr = req.body.urlStr
+	similarUrls = urlStr.findSimilar
+
+	urlObj = url.parse(urlStr,true) #true parameter parses query string
+	console.log(urlObj)
+
+	#urlObj.host= 'www.sfmoma.org'
+	#urlObj.pathname= '/exhib_events/exhibitions/513'
+	
+	console.log('host is ' + urlObj.host)
+	console.log('pathname is ' + urlObj.pathname)
+	#console.log(urlObj.query)
+
+	i = 0
+	for key, value of urlObj.query
+		if i is 0
+			console.log('query is ')	
+		console.log('  ' + key + ': ' + value)
+		i++
+	
+	#if the path is based on slashes, not question marks
+	if urlObj.query is '{}'
+		console.log('the path is based on slashes')
+		indexSplit = urlObj.pathname.lastIndexOf("/")
+		sharedPath = urlObj.pathname.substr(0,indexSplit)
+		
+		#513 OR 274127485-mrt-presents-shakespeares-will OR
+		#?page_id=140&id=1328 OR 
+		idPart = urlObj.path.substr(indexSplit+1)
+		console.log(sharedPath)
+		console.log(idPart)
+	
+	#if the path is based on question marks, not slashes
+	else
+		console.log('the path is based on question marks')
+
+
+	res.set({
+		'Content-Type': 'text/plain',
+		'Location': '/urls/12345'
+	})
+	res.send({ success: true })
+
+#TEMP: try the api
+app.get "/post", (req, res) ->
+	request.post 'http://service.com/upload', {form:{urlStr:'http://www.sfmoma.org/exhib_events/exhibitions/513'}}
 
 
 app.get "/api/urls/:url_id"
-#?apikey={API_KEY}
+	#?apikey={API_KEY}
 
 
 ###

@@ -5,13 +5,17 @@ Module dependencies.
  */
 
 (function() {
-  var app, express, findSimilar, path, port, routes, server;
+  var app, express, findSimilar, path, port, request, routes, server, url;
 
   express = require("express");
 
   routes = require("./routes");
 
   path = require("path");
+
+  request = require("request");
+
+  url = require("url");
 
 
   /*
@@ -59,7 +63,50 @@ Module dependencies.
 
   app.get("/", routes.index);
 
-  app.post("/api/urls/");
+  app.post("/api/urls/", function(req, res) {
+    var i, idPart, indexSplit, key, sharedPath, similarUrls, urlObj, urlStr, value, _ref;
+    urlStr = req.body.urlStr;
+    similarUrls = urlStr.findSimilar;
+    urlObj = url.parse(urlStr, true);
+    console.log(urlObj);
+    console.log('host is ' + urlObj.host);
+    console.log('pathname is ' + urlObj.pathname);
+    i = 0;
+    _ref = urlObj.query;
+    for (key in _ref) {
+      value = _ref[key];
+      if (i === 0) {
+        console.log('query is ');
+      }
+      console.log('  ' + key + ': ' + value);
+      i++;
+    }
+    if (urlObj.query === '{}') {
+      console.log('the path is based on slashes');
+      indexSplit = urlObj.pathname.lastIndexOf("/");
+      sharedPath = urlObj.pathname.substr(0, indexSplit);
+      idPart = urlObj.path.substr(indexSplit + 1);
+      console.log(sharedPath);
+      console.log(idPart);
+    } else {
+      console.log('the path is based on question marks');
+    }
+    res.set({
+      'Content-Type': 'text/plain',
+      'Location': '/urls/12345'
+    });
+    return res.send({
+      success: true
+    });
+  });
+
+  app.get("/post", function(req, res) {
+    return request.post('http://service.com/upload', {
+      form: {
+        urlStr: 'http://www.sfmoma.org/exhib_events/exhibitions/513'
+      }
+    });
+  });
 
   app.get("/api/urls/:url_id");
 
