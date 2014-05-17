@@ -127,6 +127,18 @@ app.post "/api/urls/", (req, res) ->
 		printKeysAndValues(urlObj.query)
 
 
+	#buildURL
+	urlToVisit = url.format(urlObj)
+
+	#visit URL
+	request urlToVisit, (error, response, html) ->
+
+		#Make sure no errors occurred when making the request
+		if(!error)
+				
+			#Play with the html
+			console.log(html)
+
 	res.set({
 		'Content-Type': 'text/plain',
 		'Location': '/urls/12345'
