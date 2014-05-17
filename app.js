@@ -99,10 +99,11 @@ Module dependencies.
   };
 
   app.post("/api/urls/", function(req, res) {
-    var idPart, indexSplit, options, sharedPath, similarUrls, urlObj, urlStr, urlToVisit;
+    var idPart, indexSplit, options, sharedPath, similarUrls, urlObj, urlStr, urlToVisit, urlToVisitParent;
     urlStr = req.body.urlStr;
     similarUrls = urlStr.findSimilar;
     urlObj = url.parse(urlStr, true);
+    console.log(urlObj);
     console.log('host is ' + urlObj.host);
     console.log('pathname is ' + urlObj.pathname);
     if (isEmpty(urlObj.query)) {
@@ -120,8 +121,14 @@ Module dependencies.
       printKeysAndValues(urlObj.query);
     }
     urlToVisit = url.format(urlObj);
+    urlObj.pathname = sharedPath;
+    urlObj.query = {};
+    urlObj.search = '';
+    urlToVisitParent = url.format(urlObj);
+    console.log(urlToVisit);
+    console.log(urlToVisitParent);
     options = {
-      url: urlToVisit,
+      url: urlToVisitParent,
       headers: {
         'User-Agent': 'PaulCowgillBot'
       }
@@ -129,7 +136,7 @@ Module dependencies.
     request(options, function(error, response, html) {
       console.log(response.statusCode);
       if (!error && response.statusCode === 200) {
-        console.log(html.substr(0, 400));
+        console.log(html.substr(400, 10));
       }
       if (!error && response.statusCode === 404) {
         return console.log('Try another URL');

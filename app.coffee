@@ -8,6 +8,7 @@ routes = require("./routes")
 path = require("path")
 request = require("request")
 url = require("url")
+#path = require("path")
 
 ###
 Middleware / express setup.
@@ -61,7 +62,7 @@ app.get "/", routes.index
 
 #Add a url to the db
 #To test:
-#curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fwww.sfmoma.org%2Fexhib_evens%2Fexhibitions%2F513" http://localhost:3000/api/urls/
+#curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fwww.sfmoma.org%2Fexhib_events%2Fexhibitions%2F513" http://localhost:3000/api/urls/
 #curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fcalendar.boston.com%2Flowell_ma%2Fevents%2Fshow%2F274127485-mrt-presents-shakespeares-will" http://localhost:3000/api/urls/
 #curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fwww.workshopsf.org%2F%3Fpage_id%3D140%26id%3D1328" http://localhost:3000/api/urls/
 #curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fevents.stanford.edu%2Fevents%2F353%2F35309%2F" http://localhost:3000/api/urls/
@@ -99,7 +100,7 @@ app.post "/api/urls/", (req, res) ->
 	similarUrls = urlStr.findSimilar
 
 	urlObj = url.parse(urlStr,true) #true parameter parses query string
-	#console.log(urlObj)
+	console.log(urlObj)
 
 	console.log('host is ' + urlObj.host)
 	console.log('pathname is ' + urlObj.pathname)
@@ -127,23 +128,39 @@ app.post "/api/urls/", (req, res) ->
 		printKeysAndValues(urlObj.query)
 
 
-	#buildURL
+	#build input URL
 	urlToVisit = url.format(urlObj)
+	#console.log(urlObj)
+
+	# Find the parent URL that's likely to link to multiple similar events
+	#(if this fails, go up two)
+	#build parent URL
+	urlObj.pathname = sharedPath
+	urlObj.query = {}
+	urlObj.search = ''	
+	urlToVisitParent = url.format(urlObj)
+	#console.log(urlObj)
+
+	console.log(urlToVisit)
+	console.log(urlToVisitParent)
 
 	#visit URL
 	options =
-		url: urlToVisit,
+		url: urlToVisitParent,
 		headers: {
 			'User-Agent': 'PaulCowgillBot'
 		}
+
 	request options, (error, response, html) ->
 
 		console.log(response.statusCode)
+		
 		#Make sure no errors occurred when making the request
 		if !error and response.statusCode == 200
 				
 			#Play with the html
-			console.log html.substr(0,400)
+			#console.log html
+			console.log html.substr(400,10)
 
 		if !error and response.statusCode == 404
 			console.log 'Try another URL'
@@ -151,16 +168,7 @@ app.post "/api/urls/", (req, res) ->
 	# Pick a generic regular expression that matches what we think is the ID / full query string
 	# do this by parsing query string into special characters, letters, and numbers
 
-
-
-	# Go up one for a restful path
-	# if this fails, go up two
-
-
-
 	# Find matches to the regex in the raw html
-
-
 
 	# Build a list of the matches
 	# if you had to go up two in the path, be careful when building the final URL results
