@@ -127,8 +127,12 @@ Module dependencies.
       }
     };
     request(options, function(error, response, html) {
-      if (!error) {
-        return console.log(html);
+      console.log(response.statusCode);
+      if (!error && response.statusCode === 200) {
+        console.log(html.substr(0, 400));
+      }
+      if (!error && response.statusCode === 404) {
+        return console.log('Try another URL');
       }
     });
     res.set({

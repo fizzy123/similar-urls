@@ -138,11 +138,16 @@ app.post "/api/urls/", (req, res) ->
 		}
 	request options, (error, response, html) ->
 
+		console.log(response.statusCode)
 		#Make sure no errors occurred when making the request
-		if(!error)
+		if !error and response.statusCode == 200
 				
 			#Play with the html
-			console.log(html)
+			console.log html.substr(0,400)
+
+		if !error and response.statusCode == 404
+			console.log 'Try another URL'
+
 
 	res.set({
 		'Content-Type': 'text/plain',
