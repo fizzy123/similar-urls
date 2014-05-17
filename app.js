@@ -99,11 +99,10 @@ Module dependencies.
   };
 
   app.post("/api/urls/", function(req, res) {
-    var idPart, indexSplit, options, sharedPath, similarUrls, urlObj, urlStr, urlToVisit, urlToVisitParent;
+    var idPart, indexSplit, sharedPath, similarUrls, urlObj, urlStr, urlToVisit, urlToVisitParent, visitUrl;
     urlStr = req.body.urlStr;
     similarUrls = urlStr.findSimilar;
     urlObj = url.parse(urlStr, true);
-    console.log(urlObj);
     console.log('host is ' + urlObj.host);
     console.log('pathname is ' + urlObj.pathname);
     if (isEmpty(urlObj.query)) {
@@ -127,21 +126,31 @@ Module dependencies.
     urlToVisitParent = url.format(urlObj);
     console.log(urlToVisit);
     console.log(urlToVisitParent);
-    options = {
-      url: urlToVisitParent,
-      headers: {
-        'User-Agent': 'PaulCowgillBot'
-      }
+    visitUrl = function(url) {
+      var options;
+      options = {
+        url: url,
+        headers: {
+          'User-Agent': 'PaulCowgillBot'
+        }
+      };
+      return request(options, function(error, response, html) {
+        console.log(response.statusCode);
+        if (!error && response.statusCode === 200) {
+          console.log(html.substr(400, 10));
+        }
+        if (!error && response.statusCode === 404) {
+          console.log('Try another URL');
+          urlToVisitParent = urlToVisitParent.removeSlash();
+          indexSplit = urlToVisitParent.lastIndexOf("/");
+          urlToVisitParent = urlToVisitParent.substr(0, indexSplit);
+          console.log(urlToVisitParent);
+          visitUrl(urlToVisitParent);
+        }
+        return response.statusCode;
+      });
     };
-    request(options, function(error, response, html) {
-      console.log(response.statusCode);
-      if (!error && response.statusCode === 200) {
-        console.log(html.substr(400, 10));
-      }
-      if (!error && response.statusCode === 404) {
-        return console.log('Try another URL');
-      }
-    });
+    visitUrl(urlToVisitParent);
     res.set({
       'Content-Type': 'text/plain',
       'Location': '/urls/12345'

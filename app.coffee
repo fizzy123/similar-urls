@@ -100,7 +100,7 @@ app.post "/api/urls/", (req, res) ->
 	similarUrls = urlStr.findSimilar
 
 	urlObj = url.parse(urlStr,true) #true parameter parses query string
-	console.log(urlObj)
+	#console.log(urlObj)
 
 	console.log('host is ' + urlObj.host)
 	console.log('pathname is ' + urlObj.pathname)
@@ -144,26 +144,39 @@ app.post "/api/urls/", (req, res) ->
 	console.log(urlToVisit)
 	console.log(urlToVisitParent)
 
-	#visit URL
-	options =
-		url: urlToVisitParent,
-		headers: {
-			'User-Agent': 'PaulCowgillBot'
-		}
+	visitUrl = (url) ->
+		#visit URL
+		options =
+			url: url,
+			headers: {
+				'User-Agent': 'PaulCowgillBot'
+			}
 
-	request options, (error, response, html) ->
+		request options, (error, response, html) ->
 
-		console.log(response.statusCode)
-		
-		#Make sure no errors occurred when making the request
-		if !error and response.statusCode == 200
+			console.log(response.statusCode)
+			
+			#Make sure no errors occurred when making the request
+			if !error and response.statusCode == 200
+					
+				#Play with the html
+				#console.log html
+				console.log html.substr(400,10)
+
+			if !error and response.statusCode == 404
+				console.log 'Try another URL'
+				urlToVisitParent = urlToVisitParent.removeSlash()
+
+				indexSplit = urlToVisitParent.lastIndexOf("/")
+				urlToVisitParent = urlToVisitParent.substr(0,indexSplit)
+				console.log(urlToVisitParent)
 				
-			#Play with the html
-			#console.log html
-			console.log html.substr(400,10)
+				visitUrl(urlToVisitParent)
 
-		if !error and response.statusCode == 404
-			console.log 'Try another URL'
+			return response.statusCode
+
+	visitUrl(urlToVisitParent)
+
 
 	# Pick a generic regular expression that matches what we think is the ID / full query string
 	# do this by parsing query string into special characters, letters, and numbers
