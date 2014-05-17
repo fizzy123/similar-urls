@@ -99,7 +99,7 @@ Module dependencies.
   };
 
   app.post("/api/urls/", function(req, res) {
-    var idPart, indexSplit, sharedPath, similarUrls, urlObj, urlStr, urlToVisit;
+    var idPart, indexSplit, options, sharedPath, similarUrls, urlObj, urlStr, urlToVisit;
     urlStr = req.body.urlStr;
     similarUrls = urlStr.findSimilar;
     urlObj = url.parse(urlStr, true);
@@ -120,7 +120,13 @@ Module dependencies.
       printKeysAndValues(urlObj.query);
     }
     urlToVisit = url.format(urlObj);
-    request(urlToVisit, function(error, response, html) {
+    options = {
+      url: urlToVisit,
+      headers: {
+        'User-Agent': 'PaulCowgillBot'
+      }
+    };
+    request(options, function(error, response, html) {
       if (!error) {
         return console.log(html);
       }

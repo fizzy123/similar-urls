@@ -131,7 +131,12 @@ app.post "/api/urls/", (req, res) ->
 	urlToVisit = url.format(urlObj)
 
 	#visit URL
-	request urlToVisit, (error, response, html) ->
+	options =
+		url: urlToVisit,
+		headers: {
+			'User-Agent': 'PaulCowgillBot'
+		}
+	request options, (error, response, html) ->
 
 		#Make sure no errors occurred when making the request
 		if(!error)
