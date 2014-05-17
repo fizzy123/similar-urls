@@ -120,6 +120,10 @@ Module dependencies.
       printKeysAndValues(urlObj.query);
     }
     urlToVisit = url.format(urlObj);
+
+    /*
+    	 * CODE GOES HERE
+     */
     urlObj.pathname = sharedPath;
     urlObj.query = {};
     urlObj.search = '';
@@ -138,6 +142,14 @@ Module dependencies.
         console.log(response.statusCode);
         if (!error && response.statusCode === 200) {
           console.log(html.substr(400, 10));
+
+          /*
+          				 * CODE GOES HERE
+           */
+
+          /*
+          				 * CODE GOES HERE
+           */
         }
         if (!error && response.statusCode === 404) {
           console.log('Try another URL');

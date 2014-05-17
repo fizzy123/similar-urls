@@ -132,6 +132,13 @@ app.post "/api/urls/", (req, res) ->
 	urlToVisit = url.format(urlObj)
 	#console.log(urlObj)
 
+	# Pick a generic regular expression that matches what we think is the ID / full query string
+	# do this by parsing query string into special characters, letters, and numbers
+
+	###
+	# CODE GOES HERE
+	###
+
 	# Find the parent URL that's likely to link to multiple similar events
 	#(if this fails, go up two)
 	#build parent URL
@@ -163,6 +170,20 @@ app.post "/api/urls/", (req, res) ->
 				#console.log html
 				console.log html.substr(400,10)
 
+				# Find matches to the regex in the raw html
+				# Build a list of the matches
+				# if you had to go up two in the path, be careful when building the final URL results
+
+				###
+				# CODE GOES HERE
+				###
+
+				# Try them until you get 10 that work
+
+				###
+				# CODE GOES HERE
+				###
+
 			if !error and response.statusCode == 404
 				console.log 'Try another URL'
 				urlToVisitParent = urlToVisitParent.removeSlash()
@@ -176,20 +197,6 @@ app.post "/api/urls/", (req, res) ->
 			return response.statusCode
 
 	visitUrl(urlToVisitParent)
-
-
-	# Pick a generic regular expression that matches what we think is the ID / full query string
-	# do this by parsing query string into special characters, letters, and numbers
-
-	# Find matches to the regex in the raw html
-
-	# Build a list of the matches
-	# if you had to go up two in the path, be careful when building the final URL results
-
-
-
-	# Try them until you get 10 that work
-
 
 	res.set({
 		'Content-Type': 'text/plain',
