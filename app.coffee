@@ -148,6 +148,27 @@ app.post "/api/urls/", (req, res) ->
 		if !error and response.statusCode == 404
 			console.log 'Try another URL'
 
+	# Pick a generic regular expression that matches what we think is the ID / full query string
+	# do this by parsing query string into special characters, letters, and numbers
+
+
+
+	# Go up one for a restful path
+	# if this fails, go up two
+
+
+
+	# Find matches to the regex in the raw html
+
+
+
+	# Build a list of the matches
+	# if you had to go up two in the path, be careful when building the final URL results
+
+
+
+	# Try them until you get 10 that work
+
 
 	res.set({
 		'Content-Type': 'text/plain',
