@@ -62,8 +62,8 @@ app.get "/", routes.index
 
 #Add a url to the db
 #To test:
-#curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fwww.sfmoma.org%2Fexhib_events%2Fexhibitions%2F513" http://localhost:3000/api/urls/
 #curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fcalendar.boston.com%2Flowell_ma%2Fevents%2Fshow%2F274127485-mrt-presents-shakespeares-will" http://localhost:3000/api/urls/
+#curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fwww.sfmoma.org%2Fexhib_events%2Fexhibitions%2F513" http://localhost:3000/api/urls/
 #curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fwww.workshopsf.org%2F%3Fpage_id%3D140%26id%3D1328" http://localhost:3000/api/urls/
 #curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fevents.stanford.edu%2Fevents%2F353%2F35309%2F" http://localhost:3000/api/urls/
 
@@ -134,6 +134,12 @@ app.post "/api/urls/", (req, res) ->
 
 	# Pick a generic regular expression that matches what we think is the ID / full query string
 	# do this by parsing query string into special characters, letters, and numbers
+	
+	# ONE REGEX TO MATCH ALL BUT ROOT DOMAIN
+	# urlObj.pathname
+
+	# SECOND REGEX TO MATCH JUST ID
+	# idPart
 
 	###
 	# CODE GOES HERE
