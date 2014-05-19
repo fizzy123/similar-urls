@@ -17,6 +17,8 @@ Module dependencies.
 
   url = require("url");
 
+  path = require("path");
+
 
   /*
   Middleware / express setup.
@@ -145,7 +147,7 @@ Module dependencies.
         }
       };
       return request(options, function(error, response, html) {
-        var answer, element, index, regexToSearchFor, _i, _len;
+        var answer, count, element, index, n, regexToSearchFor, urlOutput, word, _i, _j, _len, _len1;
         console.log(response.statusCode);
         if (!error && response.statusCode === 200) {
           console.log("Searching for...");
@@ -155,11 +157,20 @@ Module dependencies.
               console.log(element);
               regexToSearchFor = new RegExp("href=\s*[\"a-z0-9.\-\/_\?&;=:\s]*" + element + "[\"a-z0-9.\-\/_\?&;=:\s]*[0-9]+[\"a-z0-9.\-\/_\?&;=:\s]*", ["g"]);
               answer = html.match(regexToSearchFor);
-              console.log(answer);
-
-              /*
-              						 * CODE GOES HERE
-               */
+              if (answer !== null) {
+                for (count = _j = 0, _len1 = answer.length; _j < _len1; count = ++_j) {
+                  word = answer[count];
+                  word = word.replace(/\s/g, "");
+                  word = word.substr(6, word.length - 7);
+                  n = word.indexOf(urlToVisitParent);
+                  if (n === -1) {
+                    urlOutput = path.join(urlToVisitParent, word);
+                  } else {
+                    urlOutput = word;
+                  }
+                  answer[count] = urlOutput;
+                }
+              }
 
               /*
               						 * CODE GOES HERE

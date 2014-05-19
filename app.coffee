@@ -8,7 +8,7 @@ routes = require("./routes")
 path = require("path")
 request = require("request")
 url = require("url")
-#path = require("path")
+path = require("path")
 
 ###
 Middleware / express setup.
@@ -178,7 +178,6 @@ app.post "/api/urls/", (req, res) ->
 			if !error and response.statusCode == 200
 					
 				#Play with the html
-				#console.log html
 				#console.log html.substr(400,10)
 				console.log "Searching for..."
 
@@ -186,16 +185,21 @@ app.post "/api/urls/", (req, res) ->
 					if index isnt stringsToSearchFor.length - 1 and element isnt ""
 						console.log element
 						regexToSearchFor= new RegExp("href=\s*[\"a-z0-9.\-\/_\?&;=:\s]*" + element + "[\"a-z0-9.\-\/_\?&;=:\s]*[0-9]+[\"a-z0-9.\-\/_\?&;=:\s]*",["g"])
-						answer = html.match(regexToSearchFor)
-						console.log(answer)
 
 						# Find matches to the regex in the raw html
 						# Build a list of the matches
 						# if you had to go up two in the path, be careful when building the final URL results
-
-						###
-						# CODE GOES HERE
-						###
+						answer = html.match(regexToSearchFor)
+						if answer isnt null
+							for word, count in answer
+								word = word.replace(/\s/g, "")
+								word = word.substr(6,word.length-7)
+								n = word.indexOf(urlToVisitParent);
+								if n is -1
+									urlOutput = path.join(urlToVisitParent, word)
+								else
+									urlOutput = word
+								answer[count] = urlOutput
 
 						# Try them until you get 10 that work
 
