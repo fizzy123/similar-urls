@@ -114,6 +114,7 @@ app.post "/api/urls/", (req, res) ->
 
 		indexSplit = urlObj.pathname.lastIndexOf("/")
 		sharedPath = urlObj.pathname.substr(0,indexSplit)
+		stringsToSearchFor = urlObj.pathname.split("/")
 		
 		#513 OR 274127485-mrt-presents-shakespeares-will OR 
 		idPart = urlObj.pathname.substr(indexSplit+1)
@@ -126,6 +127,10 @@ app.post "/api/urls/", (req, res) ->
 		console.log('One of these is the event id.')
 		#Print the query string object
 		printKeysAndValues(urlObj.query)
+		stringsToSearchFor = []
+		for key of urlObj.query
+			stringsToSearchFor.push(key)
+		stringsToSearchFor.push("")
 
 
 	#build input URL
@@ -175,6 +180,14 @@ app.post "/api/urls/", (req, res) ->
 				#Play with the html
 				#console.log html
 				console.log html.substr(400,10)
+				console.log "Searching for..."
+
+				for element, index in stringsToSearchFor
+					if index isnt stringsToSearchFor.length - 1
+						console.log element
+						regexToSearchFor= new RegExp("href=\s*[\"a-z0-9.\-\/_\?:\s]*" + element + "[a-z0-9.\-\/_\?:\s\"]*",["g"])
+						answer = html.match(regexToSearchFor)
+						console.log(answer)
 
 				# Find matches to the regex in the raw html
 				# Build a list of the matches

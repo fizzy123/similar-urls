@@ -99,7 +99,7 @@ Module dependencies.
   };
 
   app.post("/api/urls/", function(req, res) {
-    var idPart, indexSplit, sharedPath, similarUrls, urlObj, urlStr, urlToVisit, urlToVisitParent, visitUrl;
+    var idPart, indexSplit, key, sharedPath, similarUrls, stringsToSearchFor, urlObj, urlStr, urlToVisit, urlToVisitParent, visitUrl;
     urlStr = req.body.urlStr;
     similarUrls = urlStr.findSimilar;
     urlObj = url.parse(urlStr, true);
@@ -111,6 +111,7 @@ Module dependencies.
       urlObj.pathname = urlObj.pathname.removeSlash();
       indexSplit = urlObj.pathname.lastIndexOf("/");
       sharedPath = urlObj.pathname.substr(0, indexSplit);
+      stringsToSearchFor = urlObj.pathname.split("/");
       idPart = urlObj.pathname.substr(indexSplit + 1);
       console.log('All event URLs share this string: ' + sharedPath);
       console.log('Event id is ' + idPart);
@@ -118,6 +119,11 @@ Module dependencies.
       console.log('The events are accessed with a query string.');
       console.log('One of these is the event id.');
       printKeysAndValues(urlObj.query);
+      stringsToSearchFor = [];
+      for (key in urlObj.query) {
+        stringsToSearchFor.push(key);
+      }
+      stringsToSearchFor.push("");
     }
     urlToVisit = url.format(urlObj);
 
@@ -139,9 +145,20 @@ Module dependencies.
         }
       };
       return request(options, function(error, response, html) {
+        var answer, element, index, regexToSearchFor, _i, _len;
         console.log(response.statusCode);
         if (!error && response.statusCode === 200) {
           console.log(html.substr(400, 10));
+          console.log("Searching for...");
+          for (index = _i = 0, _len = stringsToSearchFor.length; _i < _len; index = ++_i) {
+            element = stringsToSearchFor[index];
+            if (index !== stringsToSearchFor.length - 1) {
+              console.log(element);
+              regexToSearchFor = new RegExp("href=\s*[\"a-z0-9.\-\/_\?:\s]*" + element + "[a-z0-9.\-\/_\?:\s\"]*", ["g"]);
+              answer = html.match(regexToSearchFor);
+              console.log(answer);
+            }
+          }
 
           /*
           				 * CODE GOES HERE
