@@ -179,29 +179,29 @@ app.post "/api/urls/", (req, res) ->
 					
 				#Play with the html
 				#console.log html
-				console.log html.substr(400,10)
+				#console.log html.substr(400,10)
 				console.log "Searching for..."
 
 				for element, index in stringsToSearchFor
-					if index isnt stringsToSearchFor.length - 1
+					if index isnt stringsToSearchFor.length - 1 and element isnt ""
 						console.log element
-						regexToSearchFor= new RegExp("href=\s*[\"a-z0-9.\-\/_\?:\s]*" + element + "[a-z0-9.\-\/_\?:\s\"]*",["g"])
+						regexToSearchFor= new RegExp("href=\s*[\"a-z0-9.\-\/_\?&;=:\s]*" + element + "[\"a-z0-9.\-\/_\?&;=:\s]*[0-9]+[\"a-z0-9.\-\/_\?&;=:\s]*",["g"])
 						answer = html.match(regexToSearchFor)
 						console.log(answer)
 
-				# Find matches to the regex in the raw html
-				# Build a list of the matches
-				# if you had to go up two in the path, be careful when building the final URL results
+						# Find matches to the regex in the raw html
+						# Build a list of the matches
+						# if you had to go up two in the path, be careful when building the final URL results
 
-				###
-				# CODE GOES HERE
-				###
+						###
+						# CODE GOES HERE
+						###
 
-				# Try them until you get 10 that work
+						# Try them until you get 10 that work
 
-				###
-				# CODE GOES HERE
-				###
+						###
+						# CODE GOES HERE
+						###
 
 			if !error and response.statusCode == 404
 				console.log 'Try another URL'
@@ -210,6 +210,12 @@ app.post "/api/urls/", (req, res) ->
 				indexSplit = urlToVisitParent.lastIndexOf("/")
 				urlToVisitParent = urlToVisitParent.substr(0,indexSplit)
 				console.log(urlToVisitParent)
+
+				#Also update the id so you can still build the url
+
+				###
+				# CODE GOES HERE
+				###
 				
 				visitUrl(urlToVisitParent)
 

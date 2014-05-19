@@ -148,25 +148,24 @@ Module dependencies.
         var answer, element, index, regexToSearchFor, _i, _len;
         console.log(response.statusCode);
         if (!error && response.statusCode === 200) {
-          console.log(html.substr(400, 10));
           console.log("Searching for...");
           for (index = _i = 0, _len = stringsToSearchFor.length; _i < _len; index = ++_i) {
             element = stringsToSearchFor[index];
-            if (index !== stringsToSearchFor.length - 1) {
+            if (index !== stringsToSearchFor.length - 1 && element !== "") {
               console.log(element);
-              regexToSearchFor = new RegExp("href=\s*[\"a-z0-9.\-\/_\?:\s]*" + element + "[a-z0-9.\-\/_\?:\s\"]*", ["g"]);
+              regexToSearchFor = new RegExp("href=\s*[\"a-z0-9.\-\/_\?&;=:\s]*" + element + "[\"a-z0-9.\-\/_\?&;=:\s]*[0-9]+[\"a-z0-9.\-\/_\?&;=:\s]*", ["g"]);
               answer = html.match(regexToSearchFor);
               console.log(answer);
+
+              /*
+              						 * CODE GOES HERE
+               */
+
+              /*
+              						 * CODE GOES HERE
+               */
             }
           }
-
-          /*
-          				 * CODE GOES HERE
-           */
-
-          /*
-          				 * CODE GOES HERE
-           */
         }
         if (!error && response.statusCode === 404) {
           console.log('Try another URL');
@@ -174,6 +173,10 @@ Module dependencies.
           indexSplit = urlToVisitParent.lastIndexOf("/");
           urlToVisitParent = urlToVisitParent.substr(0, indexSplit);
           console.log(urlToVisitParent);
+
+          /*
+          				 * CODE GOES HERE
+           */
           visitUrl(urlToVisitParent);
         }
         return response.statusCode;
