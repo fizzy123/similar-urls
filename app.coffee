@@ -162,6 +162,7 @@ app.post "/api/urls/", (req, res) ->
 	console.log(urlToVisit)
 	console.log(urlToVisitParent)
 
+
 	visitUrl = (url) ->
 		#visit URL
 		options =
@@ -173,7 +174,8 @@ app.post "/api/urls/", (req, res) ->
 		request options, (error, response, html) ->
 
 			console.log(response.statusCode)
-			
+			allAnswers = []
+
 			#Make sure no errors occurred when making the request
 			if !error and response.statusCode == 200
 					
@@ -200,12 +202,21 @@ app.post "/api/urls/", (req, res) ->
 								else
 									urlOutput = word
 								answer[count] = urlOutput
+							
+							#if you don't have at least 10 answers yet, use these new ones
+							if allAnswers.length < 10
+								allAnswers = answer
+							
+							# if you already have at least 10 answers
+							# and you have another list of at least 10
+							# choose the one with fewer answers
+							if allAnswers.length >= 10 and answer.length >= 10
+								if answer.length < allAnswers.length
+									allAnswers = answer
 
-						# Try them until you get 10 that work
-
-						###
-						# CODE GOES HERE
-						###
+				# Pick the best 10
+				console.log("Other URLs are:")
+				console.log(allAnswers)
 
 			if !error and response.statusCode == 404
 				console.log 'Try another URL'

@@ -147,8 +147,9 @@ Module dependencies.
         }
       };
       return request(options, function(error, response, html) {
-        var answer, count, element, index, n, regexToSearchFor, urlOutput, word, _i, _j, _len, _len1;
+        var allAnswers, answer, count, element, index, n, regexToSearchFor, urlOutput, word, _i, _j, _len, _len1;
         console.log(response.statusCode);
+        allAnswers = [];
         if (!error && response.statusCode === 200) {
           console.log("Searching for...");
           for (index = _i = 0, _len = stringsToSearchFor.length; _i < _len; index = ++_i) {
@@ -170,13 +171,19 @@ Module dependencies.
                   }
                   answer[count] = urlOutput;
                 }
+                if (allAnswers.length < 10) {
+                  allAnswers = answer;
+                }
+                if (allAnswers.length >= 10 && answer.length >= 10) {
+                  if (answer.length < allAnswers.length) {
+                    allAnswers = answer;
+                  }
+                }
               }
-
-              /*
-              						 * CODE GOES HERE
-               */
             }
           }
+          console.log("Other URLs are:");
+          console.log(allAnswers);
         }
         if (!error && response.statusCode === 404) {
           console.log('Try another URL');
