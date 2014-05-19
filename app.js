@@ -105,6 +105,7 @@ Module dependencies.
     urlStr = req.body.urlStr;
     similarUrls = urlStr.findSimilar;
     urlObj = url.parse(urlStr, true);
+    console.log(urlObj);
     console.log('host is ' + urlObj.host);
     console.log('pathname is ' + urlObj.pathname);
     if (isEmpty(urlObj.query)) {
@@ -147,9 +148,11 @@ Module dependencies.
         }
       };
       return request(options, function(error, response, html) {
-        var allAnswers, answer, count, element, index, n, regexToSearchFor, urlOutput, word, _i, _j, _len, _len1;
+        var allAnswers, allAnswersA, allAnswersB, answer, answerA, answerB, count, element, index, n, options2, regexToSearchFor, temp, urlOutput, useRoot, word, _i, _j, _k, _l, _len, _len1, _len2, _len3;
         console.log(response.statusCode);
         allAnswers = [];
+        allAnswersA = [];
+        allAnswersB = [];
         if (!error && response.statusCode === 200) {
           console.log("Searching for...");
           for (index = _i = 0, _len = stringsToSearchFor.length; _i < _len; index = ++_i) {
@@ -157,33 +160,117 @@ Module dependencies.
             if (index !== stringsToSearchFor.length - 1 && element !== "") {
               console.log(element);
               regexToSearchFor = new RegExp("href=\s*[\"a-z0-9.\-\/_\?&;=:\s]*" + element + "[\"a-z0-9.\-\/_\?&;=:\s]*[0-9]+[\"a-z0-9.\-\/_\?&;=:\s]*", ["g"]);
+              useRoot = true;
               answer = html.match(regexToSearchFor);
               if (answer !== null) {
                 for (count = _j = 0, _len1 = answer.length; _j < _len1; count = ++_j) {
                   word = answer[count];
                   word = word.replace(/\s/g, "");
                   word = word.substr(6, word.length - 7);
+                  answer[count] = word;
+                }
+                answerA = answer.slice(0);
+                answerB = answer.slice(0);
+                console.log('Building one set of answers');
+                for (count = _k = 0, _len2 = answerA.length; _k < _len2; count = ++_k) {
+                  word = answerA[count];
                   n = word.indexOf(urlToVisitParent);
                   if (n === -1) {
-                    urlOutput = path.join(urlToVisitParent, word);
+                    urlOutput = urlObj.protocol + '//' + urlObj.host + word;
                   } else {
+                    console.log("parent url is already in the URL");
                     urlOutput = word;
                   }
-                  answer[count] = urlOutput;
+                  answerA[count] = urlOutput;
                 }
-                if (allAnswers.length < 10) {
-                  allAnswers = answer;
+                console.log('Building the second set of answers');
+                for (count = _l = 0, _len3 = answerB.length; _l < _len3; count = ++_l) {
+                  word = answerB[count];
+                  n = word.indexOf(urlToVisitParent);
+                  if (n === -1) {
+                    temp = path.join(urlToVisitParent, word);
+                    urlOutput = temp.replace(/http:\/\//g, "http:\/\/");
+                  } else {
+                    console.log("parent url is already in the URL");
+                    urlOutput = word;
+                  }
+                  answerB[count] = urlOutput;
                 }
-                if (allAnswers.length >= 10 && answer.length >= 10) {
-                  if (answer.length < allAnswers.length) {
-                    allAnswers = answer;
+                if (allAnswersA.length < 10) {
+                  allAnswersA = answerA;
+                }
+                if (allAnswersA.length >= 10 && answerA.length >= 10) {
+                  if (answerA.length < allAnswersA.length) {
+                    allAnswersA = answerA;
+                  }
+                }
+                if (allAnswersB.length < 10) {
+                  allAnswersB = answerB;
+                }
+                if (allAnswersB.length >= 10 && answerB.length >= 10) {
+                  if (answerB.length < allAnswersB.length) {
+                    allAnswersB = answerB;
                   }
                 }
               }
             }
           }
+          options2 = {
+            url: allAnswersA[0],
+            headers: {
+              'User-Agent': 'PaulCowgillBot'
+            }
+          };
+          request(options2, function(err, resp, html2) {
+            console.log('Checking a test URL');
+            console.log(allAnswersA[0]);
+            if (!error) {
+              if (resp !== void 0) {
+                if (resp.statusCode === 200) {
+                  console.log(resp.statusCode);
+                  allAnswers = allAnswersA.slice(0, 10);
+                  console.log("Final answer is");
+                  console.log(allAnswers);
+                  return res.send({
+                    success: true,
+                    answer: allAnswers
+                  });
+                }
+              } else {
+                return console.log('Response undefined');
+              }
+            }
+          });
+          options2 = {
+            url: allAnswersB[0],
+            headers: {
+              'User-Agent': 'PaulCowgillBot'
+            }
+          };
+          request(options2, function(err, resp, html2) {
+            console.log('Checking a test URL');
+            console.log(allAnswersB[0]);
+            if (!error) {
+              if (resp !== void 0) {
+                if (resp.statusCode === 200) {
+                  console.log(resp.statusCode);
+                  allAnswers = allAnswersB.slice(0, 10);
+                  console.log("Final answer is");
+                  console.log(allAnswers);
+                  return res.send({
+                    success: true,
+                    answer: allAnswers
+                  });
+                }
+              } else {
+                return console.log('Response undefined');
+              }
+            }
+          });
           console.log("Other URLs are:");
-          console.log(allAnswers);
+          console.log(allAnswersA);
+          console.log("...or...");
+          console.log(allAnswersB);
         }
         if (!error && response.statusCode === 404) {
           console.log('Try another URL');
@@ -201,12 +288,9 @@ Module dependencies.
       });
     };
     visitUrl(urlToVisitParent);
-    res.set({
+    return res.set({
       'Content-Type': 'text/plain',
       'Location': '/urls/12345'
-    });
-    return res.send({
-      success: true
     });
   });
 

@@ -100,7 +100,7 @@ app.post "/api/urls/", (req, res) ->
 	similarUrls = urlStr.findSimilar
 
 	urlObj = url.parse(urlStr,true) #true parameter parses query string
-	#console.log(urlObj)
+	console.log(urlObj)
 
 	console.log('host is ' + urlObj.host)
 	console.log('pathname is ' + urlObj.pathname)
@@ -175,6 +175,8 @@ app.post "/api/urls/", (req, res) ->
 
 			console.log(response.statusCode)
 			allAnswers = []
+			allAnswersA = []
+			allAnswersB = []
 
 			#Make sure no errors occurred when making the request
 			if !error and response.statusCode == 200
@@ -191,32 +193,128 @@ app.post "/api/urls/", (req, res) ->
 						# Find matches to the regex in the raw html
 						# Build a list of the matches
 						# if you had to go up two in the path, be careful when building the final URL results
+						useRoot = true
 						answer = html.match(regexToSearchFor)
+
 						if answer isnt null
 							for word, count in answer
 								word = word.replace(/\s/g, "")
 								word = word.substr(6,word.length-7)
-								n = word.indexOf(urlToVisitParent);
+								answer[count] = word
+
+							answerA = answer.slice(0)
+							answerB = answer.slice(0)
+							console.log('Building one set of answers')
+							for word, count in answerA
+								n = word.indexOf(urlToVisitParent)
+								#If parent url isn't in the URL yet
 								if n is -1
-									urlOutput = path.join(urlToVisitParent, word)
+									#console.log("Parent url not in URL")
+									urlOutput = urlObj.protocol + '//' + urlObj.host + word
+	
+								#If parent url is already in the URL
 								else
+									console.log("parent url is already in the URL")
 									urlOutput = word
-								answer[count] = urlOutput
+								answerA[count] = urlOutput
+
+							console.log('Building the second set of answers')
+							for word, count in answerB
+								n = word.indexOf(urlToVisitParent)
+								#If parent url isn't in the URL yet
+								if n is -1
+									#console.log("Parent url not in URL")
+									
+									#just stop using path.join!
+									temp = path.join(urlToVisitParent, word)
+									urlOutput = temp.replace(/http:\/\//g, "http:\/\/")
+									
+
+									#urlOutput = path.join(urlToVisitParent, word)
+	
+								#If parent url is already in the URL
+								else
+									console.log("parent url is already in the URL")
+									urlOutput = word
+								answerB[count] = urlOutput
 							
 							#if you don't have at least 10 answers yet, use these new ones
-							if allAnswers.length < 10
-								allAnswers = answer
+							if allAnswersA.length < 10
+								allAnswersA = answerA
 							
 							# if you already have at least 10 answers
 							# and you have another list of at least 10
 							# choose the one with fewer answers
-							if allAnswers.length >= 10 and answer.length >= 10
-								if answer.length < allAnswers.length
-									allAnswers = answer
+							if allAnswersA.length >= 10 and answerA.length >= 10
+								if answerA.length < allAnswersA.length
+									allAnswersA = answerA
 
-				# Pick the best 10
+							#if you don't have at least 10 answers yet, use these new ones
+							if allAnswersB.length < 10
+								allAnswersB = answerB
+							
+							# if you already have at least 10 answers
+							# and you have another list of at least 10
+							# choose the one with fewer answers
+							if allAnswersB.length >= 10 and answerB.length >= 10
+								if answerB.length < allAnswersB.length
+									allAnswersB = answerB
+
+				#Check one URL
+				options2 =
+					url: allAnswersA[0],
+					headers: {
+						'User-Agent': 'PaulCowgillBot'
+					}
+				
+				request options2, (err, resp, html2) ->
+					console.log('Checking a test URL')
+					console.log(allAnswersA[0])
+					if !error
+						if resp isnt undefined
+							if resp.statusCode == 200
+								console.log(resp.statusCode)
+								allAnswers = allAnswersA.slice(0,10)
+								console.log("Final answer is")
+								console.log(allAnswers)
+								res.send({ success: true, answer: allAnswers })
+						else
+							console.log('Response undefined')
+
+				#Check one URL
+				options2 =
+					url: allAnswersB[0],
+					headers: {
+						'User-Agent': 'PaulCowgillBot'
+					}
+				
+				request options2, (err, resp, html2) ->
+					console.log('Checking a test URL')
+					console.log(allAnswersB[0])
+					if !error
+						if resp isnt undefined
+							if resp.statusCode == 200
+								console.log(resp.statusCode)
+								allAnswers = allAnswersB.slice(0,10)
+								console.log("Final answer is")
+								console.log(allAnswers)
+								res.send({ success: true, answer: allAnswers })
+						else
+							console.log('Response undefined')
+
+
+
+				# # Pick the best 10
+
 				console.log("Other URLs are:")
-				console.log(allAnswers)
+				console.log(allAnswersA)
+				console.log("...or...")
+				console.log(allAnswersB)
+
+
+				#Still need to fix Stanford URLs. (and ones for )
+				#Need to stop truncating Boston URLs.
+
 
 			if !error and response.statusCode == 404
 				console.log 'Try another URL'
@@ -242,7 +340,6 @@ app.post "/api/urls/", (req, res) ->
 		'Content-Type': 'text/plain',
 		'Location': '/urls/12345'
 	})
-	res.send({ success: true })
 
 #TEMP: try the api
 app.get "/post", (req, res) ->
