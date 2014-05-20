@@ -210,7 +210,9 @@ app.post "/api/urls/", (req, res) ->
 								#If parent url isn't in the URL yet
 								if n is -1
 									#console.log("Parent url not in URL")
-									urlOutput = urlObj.protocol + '//' + urlObj.host + word
+									urlOutput = urlObj.protocol + '//' + urlObj.host + '/' + word
+									urlOutput = urlOutput.replace(/\/\//g, "\/")
+									urlOutput = urlOutput.replace(/http:\//g, "http:\/\/")
 	
 								#If parent url is already in the URL
 								else
@@ -226,8 +228,9 @@ app.post "/api/urls/", (req, res) ->
 									#console.log("Parent url not in URL")
 									
 									#just stop using path.join!
-									temp = path.join(urlToVisitParent, word)
-									urlOutput = temp.replace(/http:\/\//g, "http:\/\/")
+									urlOutput = urlToVisitParent + '/' + word
+									urlOutput = urlOutput.replace(/\/\//g, "\/")
+									urlOutput = urlOutput.replace(/http:\//g, "http:\/\/")
 									
 
 									#urlOutput = path.join(urlToVisitParent, word)

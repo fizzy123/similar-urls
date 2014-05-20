@@ -148,7 +148,7 @@ Module dependencies.
         }
       };
       return request(options, function(error, response, html) {
-        var allAnswers, allAnswersA, allAnswersB, answer, answerA, answerB, count, element, index, n, options2, regexToSearchFor, temp, urlOutput, useRoot, word, _i, _j, _k, _l, _len, _len1, _len2, _len3;
+        var allAnswers, allAnswersA, allAnswersB, answer, answerA, answerB, count, element, index, n, options2, regexToSearchFor, urlOutput, useRoot, word, _i, _j, _k, _l, _len, _len1, _len2, _len3;
         console.log(response.statusCode);
         allAnswers = [];
         allAnswersA = [];
@@ -176,7 +176,9 @@ Module dependencies.
                   word = answerA[count];
                   n = word.indexOf(urlToVisitParent);
                   if (n === -1) {
-                    urlOutput = urlObj.protocol + '//' + urlObj.host + word;
+                    urlOutput = urlObj.protocol + '//' + urlObj.host + '/' + word;
+                    urlOutput = urlOutput.replace(/\/\//g, "\/");
+                    urlOutput = urlOutput.replace(/http:\//g, "http:\/\/");
                   } else {
                     console.log("parent url is already in the URL");
                     urlOutput = word;
@@ -188,8 +190,9 @@ Module dependencies.
                   word = answerB[count];
                   n = word.indexOf(urlToVisitParent);
                   if (n === -1) {
-                    temp = path.join(urlToVisitParent, word);
-                    urlOutput = temp.replace(/http:\/\//g, "http:\/\/");
+                    urlOutput = urlToVisitParent + '/' + word;
+                    urlOutput = urlOutput.replace(/\/\//g, "\/");
+                    urlOutput = urlOutput.replace(/http:\//g, "http:\/\/");
                   } else {
                     console.log("parent url is already in the URL");
                     urlOutput = word;
