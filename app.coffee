@@ -34,7 +34,6 @@ app.use express.urlencoded()
 app.use express.methodOverride()
 app.use app.router
 
-#app.use require("stylus").middleware(path.join(__dirname, "public"))
 app.use express.static(path.join(__dirname, "public"))
 
 # development only
@@ -43,9 +42,6 @@ app.use express.errorHandler() if "development" is app.get("env")
 server = app.listen(3000)
 console.log "Express server listening on port " + app.get("port")
 
-
-#Be sure to set user agent somewhere!!!
-
 ###
 URL Routing
 ###
@@ -53,15 +49,6 @@ URL Routing
 #show sample json response here
 app.get "/", routes.index
 
-#return a list of urls in the db
-#app.get "/api/urls/"
-	#if urlStr parameter is included
-	#search for that specific URL by the string provided
-	#?apikey={API_KEY}
-	#?urlStr={urlStr}
-
-
-#Add a url to the db
 #To test:
 #curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fcalendar.boston.com%2Flowell_ma%2Fevents%2Fshow%2F274127485-mrt-presents-shakespeares-will" http://localhost:3000/api/urls/
 #curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fwww.sfmoma.org%2Fexhib_events%2Fexhibitions%2F513" http://localhost:3000/api/urls/
@@ -85,6 +72,7 @@ isEmpty = (obj) ->
 			return false
 	return true
 
+# To print out an object's keys and values with a single commands
 printKeysAndValues = (obj) ->
 	i = 0
 	for key, value of obj
@@ -93,43 +81,44 @@ printKeysAndValues = (obj) ->
 		console.log('  ' + key + ': ' + value)
 		i++
 
-
-
+#Include urlStr in the url
 app.get "/api/urls/:urlStr", (req, res) ->
+	
+	#Let the client know to expect JSON data
 	res.set({
-		'Content-Type': 'application/json',
-		'Location': '/urls/12345'
+		'Content-Type': 'application/json'
 	})
+	
+	#If the API request takes more than 2 minutes,
+	#give up and return a 404 error
 	setTimeout(()->
 		res.status(404)
 		res.send({success: false})
 	, 120000)
-	#urlStr={urlStr}
-	#urlStr = req.body.urlStr
+
 	urlStr = req.params.urlStr
-	#similarUrls = urlStr.findSimilar
 
+	#Convert the URL into an object using Node's url module
 	urlObj = url.parse(urlStr,true) #true parameter parses query string
-	console.log(urlObj)
+	#console.log(urlObj)
 
-	console.log('host is ' + urlObj.host)
-	console.log('pathname is ' + urlObj.pathname)
+	#console.log('host is ' + urlObj.host)
+	#console.log('pathname is ' + urlObj.pathname)
 	
-	#REST style. No query string needed.
+	#If the URL is REST style,
+	#No query string needed.
 	if isEmpty(urlObj.query)
-		console.log('query is empty')
-		console.log('REST style. No query string needed.')
+		#console.log('query is empty')
+		#console.log('REST style. No query string needed.')
 		
 		urlObj.pathname = urlObj.pathname.removeSlash()
 
-		indexSplit = urlObj.pathname.lastIndexOf("/")
-		sharedPath = urlObj.pathname.substr(0,indexSplit)
 		stringsToSearchFor = urlObj.pathname.split("/")
 		
 		#513 OR 274127485-mrt-presents-shakespeares-will OR 
-		idPart = urlObj.pathname.substr(indexSplit+1)
-		console.log('All event URLs share this string: ' + sharedPath)
-		console.log('Event id is ' + idPart)
+		#idPart = urlObj.pathname.substr(indexSplit+1)
+		#console.log('All event URLs share this string: ' + sharedPath)
+		#console.log('Event id is ' + idPart)
 	
 	#The events are accessed with a query string.
 	else
@@ -163,7 +152,10 @@ app.get "/api/urls/:urlStr", (req, res) ->
 	# Find the parent URL that's likely to link to multiple similar events
 	#(if this fails, go up two)
 	#build parent URL
-	urlObj.pathname = sharedPath
+	indexSplit = urlObj.pathname.lastIndexOf("/")
+	urlObj.pathname = urlObj.pathname.substr(0,indexSplit)
+	#sharedPath = urlObj.pathname.substr(0,indexSplit)
+	#urlObj.pathname = sharedPath
 	urlObj.query = {}
 	urlObj.search = ''	
 	urlToVisitParent = url.format(urlObj)
@@ -274,6 +266,7 @@ app.get "/api/urls/:urlStr", (req, res) ->
 								if answerB.length < allAnswersB.length
 									allAnswersB = answerB
 
+				alreadySent = false
 				#Check one URL
 				options2 =
 					url: allAnswersA[0],
@@ -292,8 +285,10 @@ app.get "/api/urls/:urlStr", (req, res) ->
 								allAnswers = allAnswersA.slice(0,10)
 								console.log("Final answer is")
 								console.log(allAnswers)
-								res.status(200)
-								res.send({ success: true, answer: allAnswers })
+								#res.status(200)
+								if alreadySent is false
+									alreadySent = true
+									res.send({ success: true, answer: allAnswers })
 						else
 							console.log('Response undefined')
 
@@ -315,8 +310,10 @@ app.get "/api/urls/:urlStr", (req, res) ->
 								allAnswers = allAnswersB.slice(0,10)
 								console.log("Final answer is")
 								console.log(allAnswers)
-								res.status(200)
-								res.send({ success: true, answer: allAnswers })
+								#res.status(200)
+								if alreadySent is false
+									alreadySent = true
+									res.send({ success: true, answer: allAnswers })
 						else
 							console.log('Response undefined')
 

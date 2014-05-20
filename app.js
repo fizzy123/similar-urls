@@ -101,10 +101,9 @@ Module dependencies.
   };
 
   app.get("/api/urls/:urlStr", function(req, res) {
-    var idPart, indexSplit, key, sharedPath, stringsToSearchFor, urlObj, urlStr, urlToVisit, urlToVisitParent, visitUrl;
+    var indexSplit, key, stringsToSearchFor, urlObj, urlStr, urlToVisit, urlToVisitParent, visitUrl;
     res.set({
-      'Content-Type': 'application/json',
-      'Location': '/urls/12345'
+      'Content-Type': 'application/json'
     });
     setTimeout(function() {
       res.status(404);
@@ -114,19 +113,9 @@ Module dependencies.
     }, 120000);
     urlStr = req.params.urlStr;
     urlObj = url.parse(urlStr, true);
-    console.log(urlObj);
-    console.log('host is ' + urlObj.host);
-    console.log('pathname is ' + urlObj.pathname);
     if (isEmpty(urlObj.query)) {
-      console.log('query is empty');
-      console.log('REST style. No query string needed.');
       urlObj.pathname = urlObj.pathname.removeSlash();
-      indexSplit = urlObj.pathname.lastIndexOf("/");
-      sharedPath = urlObj.pathname.substr(0, indexSplit);
       stringsToSearchFor = urlObj.pathname.split("/");
-      idPart = urlObj.pathname.substr(indexSplit + 1);
-      console.log('All event URLs share this string: ' + sharedPath);
-      console.log('Event id is ' + idPart);
     } else {
       console.log('The events are accessed with a query string.');
       console.log('One of these is the event id.');
@@ -142,7 +131,8 @@ Module dependencies.
     /*
     	 * CODE GOES HERE
      */
-    urlObj.pathname = sharedPath;
+    indexSplit = urlObj.pathname.lastIndexOf("/");
+    urlObj.pathname = urlObj.pathname.substr(0, indexSplit);
     urlObj.query = {};
     urlObj.search = '';
     urlToVisitParent = url.format(urlObj);
@@ -157,7 +147,7 @@ Module dependencies.
         }
       };
       return request(options, function(error, response, html) {
-        var allAnswers, allAnswersA, allAnswersB, answer, answerA, answerB, count, element, index, n, options2, regexToSearchFor, urlOutput, useRoot, word, _i, _j, _k, _l, _len, _len1, _len2, _len3;
+        var allAnswers, allAnswersA, allAnswersB, alreadySent, answer, answerA, answerB, count, element, index, n, options2, regexToSearchFor, urlOutput, useRoot, word, _i, _j, _k, _l, _len, _len1, _len2, _len3;
         console.log(response.statusCode);
         allAnswers = [];
         allAnswersA = [];
@@ -229,6 +219,7 @@ Module dependencies.
               }
             }
           }
+          alreadySent = false;
           options2 = {
             url: allAnswersA[0],
             headers: {
@@ -246,11 +237,13 @@ Module dependencies.
                   allAnswers = allAnswersA.slice(0, 10);
                   console.log("Final answer is");
                   console.log(allAnswers);
-                  res.status(200);
-                  return res.send({
-                    success: true,
-                    answer: allAnswers
-                  });
+                  if (alreadySent === false) {
+                    alreadySent = true;
+                    return res.send({
+                      success: true,
+                      answer: allAnswers
+                    });
+                  }
                 }
               } else {
                 return console.log('Response undefined');
@@ -274,11 +267,13 @@ Module dependencies.
                   allAnswers = allAnswersB.slice(0, 10);
                   console.log("Final answer is");
                   console.log(allAnswers);
-                  res.status(200);
-                  return res.send({
-                    success: true,
-                    answer: allAnswers
-                  });
+                  if (alreadySent === false) {
+                    alreadySent = true;
+                    return res.send({
+                      success: true,
+                      answer: allAnswers
+                    });
+                  }
                 }
               } else {
                 return console.log('Response undefined');
