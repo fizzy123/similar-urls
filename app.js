@@ -48,8 +48,6 @@ Module dependencies.
 
   app.use(app.router);
 
-  app.use(require("stylus").middleware(path.join(__dirname, "public")));
-
   app.use(express["static"](path.join(__dirname, "public")));
 
   if ("development" === app.get("env")) {

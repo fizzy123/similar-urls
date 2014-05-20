@@ -34,7 +34,7 @@ app.use express.urlencoded()
 app.use express.methodOverride()
 app.use app.router
 
-app.use require("stylus").middleware(path.join(__dirname, "public"))
+#app.use require("stylus").middleware(path.join(__dirname, "public"))
 app.use express.static(path.join(__dirname, "public"))
 
 # development only
