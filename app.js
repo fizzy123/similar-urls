@@ -5,7 +5,7 @@ Module dependencies.
  */
 
 (function() {
-  var app, express, findSimilar, isEmpty, path, port, printKeysAndValues, request, routes, server, url;
+  var app, express, findSimilar, isEmpty, path, port, printKeysAndValues, request, routes, server, url, _;
 
   express = require("express");
 
@@ -18,6 +18,8 @@ Module dependencies.
   url = require("url");
 
   path = require("path");
+
+  _ = require("underscore");
 
 
   /*
@@ -100,10 +102,15 @@ Module dependencies.
     return _results;
   };
 
-  app.post("/api/urls/", function(req, res) {
-    var idPart, indexSplit, key, sharedPath, similarUrls, stringsToSearchFor, urlObj, urlStr, urlToVisit, urlToVisitParent, visitUrl;
-    urlStr = req.body.urlStr;
-    similarUrls = urlStr.findSimilar;
+  app.get("/api/urls/:urlStr", function(req, res) {
+    var idPart, indexSplit, key, sharedPath, stringsToSearchFor, urlObj, urlStr, urlToVisit, urlToVisitParent, visitUrl;
+    setInterval(function() {
+      res.status(404);
+      return res.send({
+        success: false
+      });
+    }, 7000);
+    urlStr = req.params.urlStr;
     urlObj = url.parse(urlStr, true);
     console.log(urlObj);
     console.log('host is ' + urlObj.host);
@@ -162,6 +169,8 @@ Module dependencies.
               regexToSearchFor = new RegExp("href=\s*[\"a-z0-9.\-\/_\?&;=:\s]*" + element + "[\"a-z0-9.\-\/_\?&;=:\s]*[0-9]+[\"a-z0-9.\-\/_\?&;=:\s]*", ["g"]);
               useRoot = true;
               answer = html.match(regexToSearchFor);
+              console.log("Regex matches");
+              console.log(answer);
               if (answer !== null) {
                 for (count = _j = 0, _len1 = answer.length; _j < _len1; count = ++_j) {
                   word = answer[count];
@@ -231,9 +240,11 @@ Module dependencies.
               if (resp !== void 0) {
                 if (resp.statusCode === 200) {
                   console.log(resp.statusCode);
+                  allAnswersA = _.uniq(allAnswersA, false);
                   allAnswers = allAnswersA.slice(0, 10);
                   console.log("Final answer is");
                   console.log(allAnswers);
+                  res.status(200);
                   return res.send({
                     success: true,
                     answer: allAnswers
@@ -257,9 +268,11 @@ Module dependencies.
               if (resp !== void 0) {
                 if (resp.statusCode === 200) {
                   console.log(resp.statusCode);
+                  allAnswersB = _.uniq(allAnswersB, false);
                   allAnswers = allAnswersB.slice(0, 10);
                   console.log("Final answer is");
                   console.log(allAnswers);
+                  res.status(200);
                   return res.send({
                     success: true,
                     answer: allAnswers
@@ -270,10 +283,6 @@ Module dependencies.
               }
             }
           });
-          console.log("Other URLs are:");
-          console.log(allAnswersA);
-          console.log("...or...");
-          console.log(allAnswersB);
         }
         if (!error && response.statusCode === 404) {
           console.log('Try another URL');
@@ -292,7 +301,7 @@ Module dependencies.
     };
     visitUrl(urlToVisitParent);
     return res.set({
-      'Content-Type': 'text/plain',
+      'Content-Type': 'application/json',
       'Location': '/urls/12345'
     });
   });

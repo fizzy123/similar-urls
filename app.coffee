@@ -9,6 +9,7 @@ path = require("path")
 request = require("request")
 url = require("url")
 path = require("path")
+_ = require("underscore")
 
 ###
 Middleware / express setup.
@@ -94,10 +95,15 @@ printKeysAndValues = (obj) ->
 
 
 
-app.post "/api/urls/", (req, res) ->
+app.get "/api/urls/:urlStr", (req, res) ->
+	setInterval(()->
+		res.status(404)
+		res.send({success: false})
+	, 7000)
 	#urlStr={urlStr}
-	urlStr = req.body.urlStr
-	similarUrls = urlStr.findSimilar
+	#urlStr = req.body.urlStr
+	urlStr = req.params.urlStr
+	#similarUrls = urlStr.findSimilar
 
 	urlObj = url.parse(urlStr,true) #true parameter parses query string
 	console.log(urlObj)
@@ -189,12 +195,13 @@ app.post "/api/urls/", (req, res) ->
 					if index isnt stringsToSearchFor.length - 1 and element isnt ""
 						console.log element
 						regexToSearchFor= new RegExp("href=\s*[\"a-z0-9.\-\/_\?&;=:\s]*" + element + "[\"a-z0-9.\-\/_\?&;=:\s]*[0-9]+[\"a-z0-9.\-\/_\?&;=:\s]*",["g"])
-
 						# Find matches to the regex in the raw html
 						# Build a list of the matches
 						# if you had to go up two in the path, be careful when building the final URL results
 						useRoot = true
 						answer = html.match(regexToSearchFor)
+						console.log("Regex matches")
+						console.log(answer)
 
 						if answer isnt null
 							for word, count in answer
@@ -213,7 +220,7 @@ app.post "/api/urls/", (req, res) ->
 									urlOutput = urlObj.protocol + '//' + urlObj.host + '/' + word
 									urlOutput = urlOutput.replace(/\/\//g, "\/")
 									urlOutput = urlOutput.replace(/http:\//g, "http:\/\/")
-	
+
 								#If parent url is already in the URL
 								else
 									console.log("parent url is already in the URL")
@@ -277,9 +284,11 @@ app.post "/api/urls/", (req, res) ->
 						if resp isnt undefined
 							if resp.statusCode == 200
 								console.log(resp.statusCode)
+								allAnswersA = _.uniq(allAnswersA,false)
 								allAnswers = allAnswersA.slice(0,10)
 								console.log("Final answer is")
 								console.log(allAnswers)
+								res.status(200)
 								res.send({ success: true, answer: allAnswers })
 						else
 							console.log('Response undefined')
@@ -298,9 +307,11 @@ app.post "/api/urls/", (req, res) ->
 						if resp isnt undefined
 							if resp.statusCode == 200
 								console.log(resp.statusCode)
+								allAnswersB = _.uniq(allAnswersB,false)
 								allAnswers = allAnswersB.slice(0,10)
 								console.log("Final answer is")
 								console.log(allAnswers)
+								res.status(200)
 								res.send({ success: true, answer: allAnswers })
 						else
 							console.log('Response undefined')
@@ -309,10 +320,10 @@ app.post "/api/urls/", (req, res) ->
 
 				# # Pick the best 10
 
-				console.log("Other URLs are:")
-				console.log(allAnswersA)
-				console.log("...or...")
-				console.log(allAnswersB)
+				#console.log("Other URLs are:")
+				#console.log(allAnswersA)
+				#console.log("...or...")
+				#console.log(allAnswersB)
 
 
 				#Still need to fix Stanford URLs. (and ones for )
@@ -338,9 +349,8 @@ app.post "/api/urls/", (req, res) ->
 			return response.statusCode
 
 	visitUrl(urlToVisitParent)
-
 	res.set({
-		'Content-Type': 'text/plain',
+		'Content-Type': 'application/json',
 		'Location': '/urls/12345'
 	})
 
