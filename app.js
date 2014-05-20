@@ -5,7 +5,7 @@ Module dependencies.
  */
 
 (function() {
-  var app, express, findSimilar, isEmpty, path, port, printKeysAndValues, request, routes, server, url, _;
+  var app, express, isEmpty, path, port, printKeysAndValues, request, routes, server, url, _;
 
   express = require("express");
 
@@ -117,8 +117,6 @@ Module dependencies.
       urlObj.pathname = urlObj.pathname.removeSlash();
       stringsToSearchFor = urlObj.pathname.split("/");
     } else {
-      console.log('The events are accessed with a query string.');
-      console.log('One of these is the event id.');
       printKeysAndValues(urlObj.query);
       stringsToSearchFor = [];
       for (key in urlObj.query) {
@@ -127,10 +125,6 @@ Module dependencies.
       stringsToSearchFor.push("");
     }
     urlToVisit = url.format(urlObj);
-
-    /*
-    	 * CODE GOES HERE
-     */
     indexSplit = urlObj.pathname.lastIndexOf("/");
     urlObj.pathname = urlObj.pathname.substr(0, indexSplit);
     urlObj.query = {};
@@ -148,7 +142,6 @@ Module dependencies.
       };
       return request(options, function(error, response, html) {
         var allAnswers, allAnswersA, allAnswersB, alreadySent, answer, answerA, answerB, count, element, index, n, options2, regexToSearchFor, urlOutput, useRoot, word, _i, _j, _k, _l, _len, _len1, _len2, _len3;
-        console.log(response.statusCode);
         allAnswers = [];
         allAnswersA = [];
         allAnswersB = [];
@@ -287,10 +280,6 @@ Module dependencies.
           indexSplit = urlToVisitParent.lastIndexOf("/");
           urlToVisitParent = urlToVisitParent.substr(0, indexSplit);
           console.log(urlToVisitParent);
-
-          /*
-          				 * CODE GOES HERE
-           */
           visitUrl(urlToVisitParent);
         }
         return response.statusCode;
@@ -298,24 +287,5 @@ Module dependencies.
     };
     return visitUrl(urlToVisitParent);
   });
-
-  app.get("/post", function(req, res) {
-    return request.post('http://service.com/upload', {
-      form: {
-        urlStr: 'http://www.sfmoma.org/exhib_events/exhibitions/513'
-      }
-    });
-  });
-
-  app.get("/api/urls/:url_id");
-
-
-  /*
-  Generate similar URLs
-   */
-
-  findSimilar = function() {
-    return similarUrls;
-  };
 
 }).call(this);

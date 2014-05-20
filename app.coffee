@@ -106,7 +106,7 @@ app.get "/api/urls/:urlStr", (req, res) ->
 	#console.log('pathname is ' + urlObj.pathname)
 	
 	#If the URL is REST style,
-	#No query string needed.
+	#no query string needed.
 	if isEmpty(urlObj.query)
 		#console.log('query is empty')
 		#console.log('REST style. No query string needed.')
@@ -122,9 +122,10 @@ app.get "/api/urls/:urlStr", (req, res) ->
 	
 	#The events are accessed with a query string.
 	else
-		console.log('The events are accessed with a query string.')
-		console.log('One of these is the event id.')
-		#Print the query string object
+		# console.log('The events are accessed with a query string.')
+		# console.log('One of these is the event id.')
+		
+		# Print the query string object
 		printKeysAndValues(urlObj.query)
 		stringsToSearchFor = []
 		for key of urlObj.query
@@ -135,19 +136,6 @@ app.get "/api/urls/:urlStr", (req, res) ->
 	#build input URL
 	urlToVisit = url.format(urlObj)
 	#console.log(urlObj)
-
-	# Pick a generic regular expression that matches what we think is the ID / full query string
-	# do this by parsing query string into special characters, letters, and numbers
-	
-	# ONE REGEX TO MATCH ALL BUT ROOT DOMAIN
-	# urlObj.pathname
-
-	# SECOND REGEX TO MATCH JUST ID
-	# idPart
-
-	###
-	# CODE GOES HERE
-	###
 
 	# Find the parent URL that's likely to link to multiple similar events
 	#(if this fails, go up two)
@@ -175,7 +163,9 @@ app.get "/api/urls/:urlStr", (req, res) ->
 
 		request options, (error, response, html) ->
 
-			console.log(response.statusCode)
+			#console.log(response.statusCode)
+			
+			#Initialize arrays to store possible answers
 			allAnswers = []
 			allAnswersA = []
 			allAnswersB = []
@@ -190,6 +180,15 @@ app.get "/api/urls/:urlStr", (req, res) ->
 				for element, index in stringsToSearchFor
 					if index isnt stringsToSearchFor.length - 1 and element isnt ""
 						console.log element
+						
+						# Pick a generic regular expression that matches what we think is the ID / full query string
+						# do this by parsing query string into special characters, letters, and numbers
+						
+						# ONE REGEX TO MATCH ALL BUT ROOT DOMAIN
+						# urlObj.pathname
+
+						# SECOND REGEX TO MATCH JUST ID
+						# idPart
 						regexToSearchFor= new RegExp("href=\s*[\"a-z0-9.\-\/_\?&;=:\s]*" + element + "[\"a-z0-9.\-\/_\?&;=:\s]*[0-9]+[^> ]*",["g"])
 						# Find matches to the regex in the raw html
 						# Build a list of the matches
@@ -244,6 +243,8 @@ app.get "/api/urls/:urlStr", (req, res) ->
 									urlOutput = word
 								answerB[count] = urlOutput
 							
+							# Pick the best 10
+
 							#if you don't have at least 10 answers yet, use these new ones
 							if allAnswersA.length < 10
 								allAnswersA = answerA
@@ -317,20 +318,13 @@ app.get "/api/urls/:urlStr", (req, res) ->
 						else
 							console.log('Response undefined')
 
-
-
-				# # Pick the best 10
-
 				#console.log("Other URLs are:")
 				#console.log(allAnswersA)
 				#console.log("...or...")
 				#console.log(allAnswersB)
 
-
-				#Still need to fix Stanford URLs. (and ones for )
-				#Need to stop truncating Boston URLs.
-
-
+			#If the parent request didn't work,
+			#change parent url to one higher and recurse
 			if !error and response.statusCode == 404
 				console.log 'Try another URL'
 				urlToVisitParent = urlToVisitParent.removeSlash()
@@ -340,29 +334,10 @@ app.get "/api/urls/:urlStr", (req, res) ->
 				console.log(urlToVisitParent)
 
 				#Also update the id so you can still build the url
-
-				###
-				# CODE GOES HERE
-				###
 				
 				visitUrl(urlToVisitParent)
 
 			return response.statusCode
 
+	#Call the function
 	visitUrl(urlToVisitParent)
-
-#TEMP: try the api
-app.get "/post", (req, res) ->
-	request.post 'http://service.com/upload', {form:{urlStr:'http://www.sfmoma.org/exhib_events/exhibitions/513'}}
-
-
-app.get "/api/urls/:url_id"
-	#?apikey={API_KEY}
-
-
-###
-Generate similar URLs
-###
-findSimilar = () ->
-	return similarUrls
-
