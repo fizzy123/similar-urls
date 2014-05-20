@@ -4,12 +4,10 @@ Module dependencies.
 ###
 express = require("express")
 routes = require("./routes")
-#config = require("./config")
 path = require("path")
-request = require("request")
-url = require("url")
-path = require("path")
-_ = require("underscore")
+request = require("request") #Use HTTP to visit URLs
+url = require("url") #URL parsing
+_ = require("underscore") #Useful array operations, etc.
 
 ###
 Middleware / express setup.
@@ -43,18 +41,8 @@ server = app.listen(3000)
 console.log "Express server listening on port " + app.get("port")
 
 ###
-URL Routing
+# General purpose functions
 ###
-
-#show sample json response here
-app.get "/", routes.index
-
-#To test:
-#curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fcalendar.boston.com%2Flowell_ma%2Fevents%2Fshow%2F274127485-mrt-presents-shakespeares-will" http://localhost:3000/api/urls/
-#curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fwww.sfmoma.org%2Fexhib_events%2Fexhibitions%2F513" http://localhost:3000/api/urls/
-#curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fwww.workshopsf.org%2F%3Fpage_id%3D140%26id%3D1328" http://localhost:3000/api/urls/
-#curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fevents.stanford.edu%2Fevents%2F353%2F35309%2F" http://localhost:3000/api/urls/
-
 String.prototype.removeSlash = () ->
 	#If last char is a slash
 	output = this
@@ -81,6 +69,20 @@ printKeysAndValues = (obj) ->
 		console.log('  ' + key + ': ' + value)
 		i++
 
+
+###
+URL Routing
+###
+
+#show sample json response here
+app.get "/", routes.index
+
+#To test:
+#curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fcalendar.boston.com%2Flowell_ma%2Fevents%2Fshow%2F274127485-mrt-presents-shakespeares-will" http://localhost:3000/api/urls/
+#curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fwww.sfmoma.org%2Fexhib_events%2Fexhibitions%2F513" http://localhost:3000/api/urls/
+#curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fwww.workshopsf.org%2F%3Fpage_id%3D140%26id%3D1328" http://localhost:3000/api/urls/
+#curl -H  "Content-Type:application/x-www-form-urlencoded" --data "urlStr=http%3A%2F%2Fevents.stanford.edu%2Fevents%2F353%2F35309%2F" http://localhost:3000/api/urls/
+
 #Include urlStr in the url
 app.get "/api/urls/:urlStr", (req, res) ->
 	
@@ -89,42 +91,31 @@ app.get "/api/urls/:urlStr", (req, res) ->
 		'Content-Type': 'application/json'
 	})
 	
+	alreadySent = false
 	#If the API request takes more than 2 minutes,
 	#give up and return a 404 error
 	setTimeout(()->
-		res.status(404)
-		res.send({success: false})
+		if alreadySent is false
+			res.status(404)
+			res.send({success: false})
 	, 120000)
 
 	urlStr = req.params.urlStr
 
 	#Convert the URL into an object using Node's url module
 	urlObj = url.parse(urlStr,true) #true parameter parses query string
-	#console.log(urlObj)
-
-	#console.log('host is ' + urlObj.host)
-	#console.log('pathname is ' + urlObj.pathname)
 	
 	#If the URL is REST style,
 	#no query string needed.
 	if isEmpty(urlObj.query)
-		#console.log('query is empty')
-		#console.log('REST style. No query string needed.')
 		
 		urlObj.pathname = urlObj.pathname.removeSlash()
-
 		stringsToSearchFor = urlObj.pathname.split("/")
-		
 		#513 OR 274127485-mrt-presents-shakespeares-will OR 
 		#idPart = urlObj.pathname.substr(indexSplit+1)
-		#console.log('All event URLs share this string: ' + sharedPath)
-		#console.log('Event id is ' + idPart)
-	
+		
 	#The events are accessed with a query string.
 	else
-		# console.log('The events are accessed with a query string.')
-		# console.log('One of these is the event id.')
-		
 		# Print the query string object
 		printKeysAndValues(urlObj.query)
 		stringsToSearchFor = []
@@ -132,10 +123,8 @@ app.get "/api/urls/:urlStr", (req, res) ->
 			stringsToSearchFor.push(key)
 		stringsToSearchFor.push("")
 
-
 	#build input URL
 	urlToVisit = url.format(urlObj)
-	#console.log(urlObj)
 
 	# Find the parent URL that's likely to link to multiple similar events
 	#(if this fails, go up two)
@@ -147,11 +136,6 @@ app.get "/api/urls/:urlStr", (req, res) ->
 	urlObj.query = {}
 	urlObj.search = ''	
 	urlToVisitParent = url.format(urlObj)
-	#console.log(urlObj)
-
-	console.log(urlToVisit)
-	console.log(urlToVisitParent)
-
 
 	visitUrl = (url) ->
 		#visit URL
@@ -161,93 +145,103 @@ app.get "/api/urls/:urlStr", (req, res) ->
 				'User-Agent': 'PaulCowgillBot'
 			}
 
+		console.log(url)
+
 		request options, (error, response, html) ->
 
-			#console.log(response.statusCode)
+			console.log(response.statusCode)
 			
 			#Initialize arrays to store possible answers
 			allAnswers = []
 			allAnswersA = []
 			allAnswersB = []
 
+			#If the parent request didn't work,
+			#change parent url to one higher and recurse
+			if !error and response.statusCode == 404
+				console.log 'Try another URL'
+				urlToVisitParent = urlToVisitParent.removeSlash()
+
+				indexSplit = urlToVisitParent.lastIndexOf("/")
+				urlToVisitParent = urlToVisitParent.substr(0,indexSplit)
+				console.log(urlToVisitParent)
+
+				#Also update the id so you can still build the url
+				
+				visitUrl(urlToVisitParent)
+
 			#Make sure no errors occurred when making the request
 			if !error and response.statusCode == 200
 					
 				#Play with the html
-				#console.log html.substr(400,10)
 				console.log "Searching for..."
 
 				for element, index in stringsToSearchFor
 					if index isnt stringsToSearchFor.length - 1 and element isnt ""
 						console.log element
 						
-						# Pick a generic regular expression that matches what we think is the ID / full query string
-						# do this by parsing query string into special characters, letters, and numbers
-						
-						# ONE REGEX TO MATCH ALL BUT ROOT DOMAIN
-						# urlObj.pathname
-
-						# SECOND REGEX TO MATCH JUST ID
-						# idPart
+						# Pick a regular expression that matches possible href matches
 						regexToSearchFor= new RegExp("href=\s*[\"a-z0-9.\-\/_\?&;=:\s]*" + element + "[\"a-z0-9.\-\/_\?&;=:\s]*[0-9]+[^> ]*",["g"])
+						
 						# Find matches to the regex in the raw html
 						# Build a list of the matches
-						# if you had to go up two in the path, be careful when building the final URL results
-						useRoot = true
 						answer = html.match(regexToSearchFor)
-						console.log("Regex matches")
-						console.log(answer)
 
+						#if there was a match
 						if answer isnt null
 							for word, count in answer
+								#remove any spaces
 								word = word.replace(/\s/g, "")
+								#get rid of the href="..." on the outside of the string
 								word = word.substr(6,word.length-7)
 								answer[count] = word
 
+							#Make copies of the array to try different URL string concatenations
 							answerA = answer.slice(0)
 							answerB = answer.slice(0)
-							console.log('Building one set of answers')
-							for word, count in answerA
-								n = word.indexOf(urlToVisitParent)
-								#If parent url isn't in the URL yet
-								if n is -1
-									#console.log("Parent url not in URL")
-									urlOutput = urlObj.protocol + '//' + urlObj.host + '/' + word
-									urlOutput = urlOutput.replace(/\/\//g, "\/")
-									urlOutput = urlOutput.replace(/http:\//g, "http:\/\/")
 
-								#If parent url is already in the URL
+							#console.log('Building one set of answers')
+							for word, count in answer
+								
+								#Is the path relative or absolute?
+								n = word.indexOf(urlToVisitParent)
+								
+								#If the URL path is relative
+								#It might be relative to the parent directory or the root domain
+								if n is -1
+									
+									#Try assuming the path is relative to the root domain
+									urlOutputA = urlObj.protocol + '//' + urlObj.host + '/' + word
+									
+									#Try assuming the path is relative to the parent directory
+									urlOutputB = urlToVisitParent + '/' + word
+									
+									#Make sure there are two slashes after the http:
+									#and one between each subsequent part of the path
+									urlOutputA = urlOutputA.replace(/\/\//g, "\/")
+									urlOutputA = urlOutputA.replace(/http:\//g, "http:\/\/")
+									urlOutputB = urlOutputB.replace(/\/\//g, "\/")
+									urlOutputB = urlOutputB.replace(/http:\//g, "http:\/\/")
+
+								#If URL path is absolute
 								else
 									console.log("parent url is already in the URL")
-									urlOutput = word
-								answerA[count] = urlOutput
+									urlOutputA = word
+									urlOutputB = word
 
-							console.log('Building the second set of answers')
-							for word, count in answerB
-								n = word.indexOf(urlToVisitParent)
-								#If parent url isn't in the URL yet
-								if n is -1
-									#console.log("Parent url not in URL")
-									
-									#just stop using path.join!
-									urlOutput = urlToVisitParent + '/' + word
-									urlOutput = urlOutput.replace(/\/\//g, "\/")
-									urlOutput = urlOutput.replace(/http:\//g, "http:\/\/")
-									
+								answerA[count] = urlOutputA
+								answerB[count] = urlOutputB
 
-									#urlOutput = path.join(urlToVisitParent, word)
-	
-								#If parent url is already in the URL
-								else
-									console.log("parent url is already in the URL")
-									urlOutput = word
-								answerB[count] = urlOutput
-							
-							# Pick the best 10
+							#We're still inside the loop of the stringsToSearchFor
+							#So we don't know which answer array is probably right yet
+							#Let's use the number of results for each search string
+							#as an indicator.
 
 							#if you don't have at least 10 answers yet, use these new ones
 							if allAnswersA.length < 10
 								allAnswersA = answerA
+							if allAnswersB.length < 10
+								allAnswersB = answerB
 							
 							# if you already have at least 10 answers
 							# and you have another list of at least 10
@@ -255,22 +249,15 @@ app.get "/api/urls/:urlStr", (req, res) ->
 							if allAnswersA.length >= 10 and answerA.length >= 10
 								if answerA.length < allAnswersA.length
 									allAnswersA = answerA
-
-							#if you don't have at least 10 answers yet, use these new ones
-							if allAnswersB.length < 10
-								allAnswersB = answerB
-							
-							# if you already have at least 10 answers
-							# and you have another list of at least 10
-							# choose the one with fewer answers
 							if allAnswersB.length >= 10 and answerB.length >= 10
 								if answerB.length < allAnswersB.length
 									allAnswersB = answerB
 
 				###
 				# Choose the correct array from the search results
+				# Note: Duplicated code below - need to clean this up
 				###
-				alreadySent = false
+				
 				#Check one URL
 				options2 =
 					url: allAnswersA[0],
@@ -289,7 +276,6 @@ app.get "/api/urls/:urlStr", (req, res) ->
 								allAnswers = allAnswersA.slice(0,10)
 								console.log("Final answer is")
 								console.log(allAnswers)
-								#res.status(200)
 								if alreadySent is false
 									alreadySent = true
 									res.send({ success: true, answer: allAnswers })
@@ -321,24 +307,6 @@ app.get "/api/urls/:urlStr", (req, res) ->
 						else
 							console.log('Response undefined')
 
-				#console.log("Other URLs are:")
-				#console.log(allAnswersA)
-				#console.log("...or...")
-				#console.log(allAnswersB)
-
-			#If the parent request didn't work,
-			#change parent url to one higher and recurse
-			if !error and response.statusCode == 404
-				console.log 'Try another URL'
-				urlToVisitParent = urlToVisitParent.removeSlash()
-
-				indexSplit = urlToVisitParent.lastIndexOf("/")
-				urlToVisitParent = urlToVisitParent.substr(0,indexSplit)
-				console.log(urlToVisitParent)
-
-				#Also update the id so you can still build the url
-				
-				visitUrl(urlToVisitParent)
 
 			return response.statusCode
 

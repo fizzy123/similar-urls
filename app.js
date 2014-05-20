@@ -17,8 +17,6 @@ Module dependencies.
 
   url = require("url");
 
-  path = require("path");
-
   _ = require("underscore");
 
 
@@ -60,10 +58,8 @@ Module dependencies.
 
 
   /*
-  URL Routing
+   * General purpose functions
    */
-
-  app.get("/", routes.index);
 
   String.prototype.removeSlash = function() {
     var output;
@@ -100,16 +96,26 @@ Module dependencies.
     return _results;
   };
 
+
+  /*
+  URL Routing
+   */
+
+  app.get("/", routes.index);
+
   app.get("/api/urls/:urlStr", function(req, res) {
-    var indexSplit, key, stringsToSearchFor, urlObj, urlStr, urlToVisit, urlToVisitParent, visitUrl;
+    var alreadySent, indexSplit, key, stringsToSearchFor, urlObj, urlStr, urlToVisit, urlToVisitParent, visitUrl;
     res.set({
       'Content-Type': 'application/json'
     });
+    alreadySent = false;
     setTimeout(function() {
-      res.status(404);
-      return res.send({
-        success: false
-      });
+      if (alreadySent === false) {
+        res.status(404);
+        return res.send({
+          success: false
+        });
+      }
     }, 120000);
     urlStr = req.params.urlStr;
     urlObj = url.parse(urlStr, true);
@@ -130,8 +136,6 @@ Module dependencies.
     urlObj.query = {};
     urlObj.search = '';
     urlToVisitParent = url.format(urlObj);
-    console.log(urlToVisit);
-    console.log(urlToVisitParent);
     visitUrl = function(url) {
       var options;
       options = {
@@ -140,11 +144,21 @@ Module dependencies.
           'User-Agent': 'PaulCowgillBot'
         }
       };
+      console.log(url);
       return request(options, function(error, response, html) {
-        var allAnswers, allAnswersA, allAnswersB, alreadySent, answer, answerA, answerB, count, element, index, n, options2, regexToSearchFor, urlOutput, useRoot, word, _i, _j, _k, _l, _len, _len1, _len2, _len3;
+        var allAnswers, allAnswersA, allAnswersB, answer, answerA, answerB, count, element, index, n, options2, regexToSearchFor, urlOutputA, urlOutputB, word, _i, _j, _k, _len, _len1, _len2;
+        console.log(response.statusCode);
         allAnswers = [];
         allAnswersA = [];
         allAnswersB = [];
+        if (!error && response.statusCode === 404) {
+          console.log('Try another URL');
+          urlToVisitParent = urlToVisitParent.removeSlash();
+          indexSplit = urlToVisitParent.lastIndexOf("/");
+          urlToVisitParent = urlToVisitParent.substr(0, indexSplit);
+          console.log(urlToVisitParent);
+          visitUrl(urlToVisitParent);
+        }
         if (!error && response.statusCode === 200) {
           console.log("Searching for...");
           for (index = _i = 0, _len = stringsToSearchFor.length; _i < _len; index = ++_i) {
@@ -152,10 +166,7 @@ Module dependencies.
             if (index !== stringsToSearchFor.length - 1 && element !== "") {
               console.log(element);
               regexToSearchFor = new RegExp("href=\s*[\"a-z0-9.\-\/_\?&;=:\s]*" + element + "[\"a-z0-9.\-\/_\?&;=:\s]*[0-9]+[^> ]*", ["g"]);
-              useRoot = true;
               answer = html.match(regexToSearchFor);
-              console.log("Regex matches");
-              console.log(answer);
               if (answer !== null) {
                 for (count = _j = 0, _len1 = answer.length; _j < _len1; count = ++_j) {
                   word = answer[count];
@@ -165,44 +176,34 @@ Module dependencies.
                 }
                 answerA = answer.slice(0);
                 answerB = answer.slice(0);
-                console.log('Building one set of answers');
-                for (count = _k = 0, _len2 = answerA.length; _k < _len2; count = ++_k) {
-                  word = answerA[count];
+                for (count = _k = 0, _len2 = answer.length; _k < _len2; count = ++_k) {
+                  word = answer[count];
                   n = word.indexOf(urlToVisitParent);
                   if (n === -1) {
-                    urlOutput = urlObj.protocol + '//' + urlObj.host + '/' + word;
-                    urlOutput = urlOutput.replace(/\/\//g, "\/");
-                    urlOutput = urlOutput.replace(/http:\//g, "http:\/\/");
+                    urlOutputA = urlObj.protocol + '//' + urlObj.host + '/' + word;
+                    urlOutputB = urlToVisitParent + '/' + word;
+                    urlOutputA = urlOutputA.replace(/\/\//g, "\/");
+                    urlOutputA = urlOutputA.replace(/http:\//g, "http:\/\/");
+                    urlOutputB = urlOutputB.replace(/\/\//g, "\/");
+                    urlOutputB = urlOutputB.replace(/http:\//g, "http:\/\/");
                   } else {
                     console.log("parent url is already in the URL");
-                    urlOutput = word;
+                    urlOutputA = word;
+                    urlOutputB = word;
                   }
-                  answerA[count] = urlOutput;
-                }
-                console.log('Building the second set of answers');
-                for (count = _l = 0, _len3 = answerB.length; _l < _len3; count = ++_l) {
-                  word = answerB[count];
-                  n = word.indexOf(urlToVisitParent);
-                  if (n === -1) {
-                    urlOutput = urlToVisitParent + '/' + word;
-                    urlOutput = urlOutput.replace(/\/\//g, "\/");
-                    urlOutput = urlOutput.replace(/http:\//g, "http:\/\/");
-                  } else {
-                    console.log("parent url is already in the URL");
-                    urlOutput = word;
-                  }
-                  answerB[count] = urlOutput;
+                  answerA[count] = urlOutputA;
+                  answerB[count] = urlOutputB;
                 }
                 if (allAnswersA.length < 10) {
                   allAnswersA = answerA;
+                }
+                if (allAnswersB.length < 10) {
+                  allAnswersB = answerB;
                 }
                 if (allAnswersA.length >= 10 && answerA.length >= 10) {
                   if (answerA.length < allAnswersA.length) {
                     allAnswersA = answerA;
                   }
-                }
-                if (allAnswersB.length < 10) {
-                  allAnswersB = answerB;
                 }
                 if (allAnswersB.length >= 10 && answerB.length >= 10) {
                   if (answerB.length < allAnswersB.length) {
@@ -215,8 +216,8 @@ Module dependencies.
 
           /*
           				 * Choose the correct array from the search results
+          				 * Note: Duplicated code below - need to clean this up
            */
-          alreadySent = false;
           options2 = {
             url: allAnswersA[0],
             headers: {
@@ -277,14 +278,6 @@ Module dependencies.
               }
             }
           });
-        }
-        if (!error && response.statusCode === 404) {
-          console.log('Try another URL');
-          urlToVisitParent = urlToVisitParent.removeSlash();
-          indexSplit = urlToVisitParent.lastIndexOf("/");
-          urlToVisitParent = urlToVisitParent.substr(0, indexSplit);
-          console.log(urlToVisitParent);
-          visitUrl(urlToVisitParent);
         }
         return response.statusCode;
       });
