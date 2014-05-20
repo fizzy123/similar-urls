@@ -212,6 +212,10 @@ Module dependencies.
               }
             }
           }
+
+          /*
+          				 * Choose the correct array from the search results
+           */
           alreadySent = false;
           options2 = {
             url: allAnswersA[0],

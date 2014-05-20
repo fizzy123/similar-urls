@@ -267,6 +267,9 @@ app.get "/api/urls/:urlStr", (req, res) ->
 								if answerB.length < allAnswersB.length
 									allAnswersB = answerB
 
+				###
+				# Choose the correct array from the search results
+				###
 				alreadySent = false
 				#Check one URL
 				options2 =
