@@ -104,12 +104,16 @@ Module dependencies.
 
   app.get("/api/urls/:urlStr", function(req, res) {
     var idPart, indexSplit, key, sharedPath, stringsToSearchFor, urlObj, urlStr, urlToVisit, urlToVisitParent, visitUrl;
-    setInterval(function() {
+    res.set({
+      'Content-Type': 'application/json',
+      'Location': '/urls/12345'
+    });
+    setTimeout(function() {
       res.status(404);
       return res.send({
         success: false
       });
-    }, 7000);
+    }, 120000);
     urlStr = req.params.urlStr;
     urlObj = url.parse(urlStr, true);
     console.log(urlObj);
@@ -166,7 +170,7 @@ Module dependencies.
             element = stringsToSearchFor[index];
             if (index !== stringsToSearchFor.length - 1 && element !== "") {
               console.log(element);
-              regexToSearchFor = new RegExp("href=\s*[\"a-z0-9.\-\/_\?&;=:\s]*" + element + "[\"a-z0-9.\-\/_\?&;=:\s]*[0-9]+[\"a-z0-9.\-\/_\?&;=:\s]*", ["g"]);
+              regexToSearchFor = new RegExp("href=\s*[\"a-z0-9.\-\/_\?&;=:\s]*" + element + "[\"a-z0-9.\-\/_\?&;=:\s]*[0-9]+[^> ]*", ["g"]);
               useRoot = true;
               answer = html.match(regexToSearchFor);
               console.log("Regex matches");
@@ -299,11 +303,7 @@ Module dependencies.
         return response.statusCode;
       });
     };
-    visitUrl(urlToVisitParent);
-    return res.set({
-      'Content-Type': 'application/json',
-      'Location': '/urls/12345'
-    });
+    return visitUrl(urlToVisitParent);
   });
 
   app.get("/post", function(req, res) {

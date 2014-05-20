@@ -96,10 +96,14 @@ printKeysAndValues = (obj) ->
 
 
 app.get "/api/urls/:urlStr", (req, res) ->
-	setInterval(()->
+	res.set({
+		'Content-Type': 'application/json',
+		'Location': '/urls/12345'
+	})
+	setTimeout(()->
 		res.status(404)
 		res.send({success: false})
-	, 7000)
+	, 120000)
 	#urlStr={urlStr}
 	#urlStr = req.body.urlStr
 	urlStr = req.params.urlStr
@@ -194,7 +198,7 @@ app.get "/api/urls/:urlStr", (req, res) ->
 				for element, index in stringsToSearchFor
 					if index isnt stringsToSearchFor.length - 1 and element isnt ""
 						console.log element
-						regexToSearchFor= new RegExp("href=\s*[\"a-z0-9.\-\/_\?&;=:\s]*" + element + "[\"a-z0-9.\-\/_\?&;=:\s]*[0-9]+[\"a-z0-9.\-\/_\?&;=:\s]*",["g"])
+						regexToSearchFor= new RegExp("href=\s*[\"a-z0-9.\-\/_\?&;=:\s]*" + element + "[\"a-z0-9.\-\/_\?&;=:\s]*[0-9]+[^> ]*",["g"])
 						# Find matches to the regex in the raw html
 						# Build a list of the matches
 						# if you had to go up two in the path, be careful when building the final URL results
@@ -349,10 +353,6 @@ app.get "/api/urls/:urlStr", (req, res) ->
 			return response.statusCode
 
 	visitUrl(urlToVisitParent)
-	res.set({
-		'Content-Type': 'application/json',
-		'Location': '/urls/12345'
-	})
 
 #TEMP: try the api
 app.get "/post", (req, res) ->
